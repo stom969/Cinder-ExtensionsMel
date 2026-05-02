@@ -19,7 +19,7 @@ __cinderExport = {
     if (this._cachedList) return this._cachedList;
 
     // URL to your comics.json – use your server or GitHub Pages URL
-    const listUrl = "https://www.jsonkeeper.com/b/KVARI"; // ← change this to your actual URL
+    const listUrl = "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json"; // ← change this to your actual URL
 
     let response = await cinder.fetch(listUrl);
     if (response.status !== 200) {
