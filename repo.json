@@ -16,9 +16,9 @@
     "id": "gocomics-manga-test2",
     "name": "GoComics Manga Test 2",
     "version": "1.0.0",
-    "description": "Manga reader test",
+    "description": "Manga reader test with placehold.co",
     "contentType": "manga",
-    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/Gocomics.js",
+    "scriptUrl": "http://localhost:8000/gocomics_manga_test2.js",
     "minCinderVersion": "2.0.0"
   },
 		{
