@@ -13,10 +13,10 @@
 		},
 
 		{
-    "id": "gocomics-manga-test2",
-    "name": "GoComics Manga Test 2",
+    "id": "gocomics",
+    "name": "GoComics",
     "version": "1.0.0",
-    "description": "Manga reader test with placehold.co",
+    "description": "Read comics from Gocomics.com",
     "contentType": "manga",
     "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/Gocomics.js",
     "minCinderVersion": "2.0.0"
