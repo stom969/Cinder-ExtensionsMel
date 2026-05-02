@@ -1,17 +1,16 @@
 __cinderExport = {
   id: "gocomics",
-  name: "GoComics Direct",
+  name: "GoComics Resolve",
   version: "1.0.0",
   icon: "📰",
-  description: "Direct download test – green square",
+  description: "Resolve test – should show a red dot",
   contentType: "comics",
 
   capabilities: {
     search: true,
     discover: false,
-    download: true,
-    resolve: false,
-    manga: false,
+    download: false,
+    resolve: true,
   },
 
   LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
@@ -35,8 +34,15 @@ __cinderExport = {
       title: c.name,
       author: "",
       cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
-      url: "https://via.placeholder.com/800x600/00ff00/000000?text=Direct+Download+Works!",  // HARDCODED PLACEHOLDER
+      // NO url field
       format: "comics",
     }));
+  },
+
+  async resolve(item) {
+    // Return a hardcoded red pixel as data URL – no network needed
+    return {
+      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+    };
   }
 };
