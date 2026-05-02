@@ -13,8 +13,8 @@
 		},
 
 		{
-		    "id": "gocomics",
-			"name": "GoComics Final",
+		    "id": "gocomics-manga-test",
+			"name": "GoComics Manga Test",
 		    "version": "1.0.0",
 		    "description": "Read daily comic strips from GoComics.com",
 		    "contentType": "comics",
