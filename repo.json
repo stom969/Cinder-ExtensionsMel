@@ -14,7 +14,7 @@
 
 		{
 		    "id": "gocomics",
-			"name": "GoComics Resolve",
+			"name": "GoComics Final",
 		    "version": "1.0.0",
 		    "description": "Read daily comic strips from GoComics.com",
 		    "contentType": "comics",
