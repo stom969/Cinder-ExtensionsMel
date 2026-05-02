@@ -1,9 +1,9 @@
 __cinderExport = {
-  id: "gocomics-manga-test",
-  name: "GoComics Manga Test",
+  id: "gocomics-manga-test2",
+  name: "GoComics Manga Test 2",
   version: "1.0.0",
   icon: "📰",
-  description: "Tests manga reader with placeholder image",
+  description: "Tests manga reader with placehold.co",
   contentType: "manga",
 
   capabilities: {
@@ -15,12 +15,11 @@ __cinderExport = {
   },
 
   async search(query, page = 0) {
-    // Return a single fake comic for testing
     return [
       {
         id: "test-comic",
-        title: "Test Comic (Manga Reader)",
-        cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
+        title: "Test Comic (Manga Reader 2)",
+        cover: "https://placehold.co/150x200/cccccc/000000?text=Test",
         format: "manga",
       }
     ];
@@ -30,7 +29,7 @@ __cinderExport = {
     return {
       id: id,
       title: "Test Comic",
-      cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
+      cover: "https://placehold.co/150x200/cccccc/000000?text=Test",
       description: "A test comic",
       author: "Test Author",
       status: "ongoing",
@@ -39,7 +38,6 @@ __cinderExport = {
   },
 
   async getChapters(mangaId) {
-    // Return 2 fake chapters
     return [
       {
         id: "chapter-1",
@@ -59,10 +57,9 @@ __cinderExport = {
   },
 
   async getPages(chapterId) {
-    // Return a placeholder image (real HTTP URL, not data URL)
     return [
       {
-        url: "https://via.placeholder.com/800x600/00ff00/ffffff?text=Chapter+" + chapterId,
+        url: "https://placehold.co/800x600/00ff00/white?text=Chapter+" + chapterId,
       }
     ];
   }
