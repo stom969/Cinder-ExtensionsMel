@@ -1,6 +1,6 @@
 {
-	"name": "Cinder Test Extensions",
-	"author": "CinderDev",
+	"name": "Cinder Mel Extensions",
+	"author": "stom969",
 	"extensions": [
 		{
 			"id": "mangadex",
