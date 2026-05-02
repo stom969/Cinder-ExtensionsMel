@@ -13,8 +13,8 @@
 		},
 
 		{
-    "id": "gocomics",
-    "name": "GoComics",
+     "id": "gocomics",
+ "name": "GoComics Tiny",
     "version": "3.0.0",
     "description": "Read daily comic strips from GoComics.com",
     "contentType": "comics",
