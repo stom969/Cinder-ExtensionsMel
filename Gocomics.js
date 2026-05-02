@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "gocomics",
   name: "GoComics",
-  version: "1.0.0",
+  version: "1.1.0",
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
   contentType: "comics",
