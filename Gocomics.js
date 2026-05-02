@@ -1,4 +1,32 @@
 __cinderExport = {
+  id: "gocomics-final",
+  name: "GoComics Final",
+  version: "1.0.0",
+  icon: "📰",
+  description: "Final test – direct download works",
+  contentType: "comics",
+
+  capabilities: {
+    search: true,
+    discover: false,
+    download: true,
+    resolve: false,
+  },
+
+  async search(query, page) {
+    // Hardcoded single comic – no list
+    return [
+      {
+        id: "calvinandhobbes",
+        title: "Calvin and Hobbes (Final Test)",
+        author: "",
+        cover: "https://avatar.amuniversal.com/feature_avatars/recommendation?feature=calvinandhobbes",
+        url: "https://via.placeholder.com/800x600/00ff00/000000?text=WORKS",  // hardcoded placeholder
+        format: "comics",
+      }
+    ];
+  }
+};__cinderExport = {
   id: "gocomics",
   name: "GoComics Resolve",
   version: "1.0.0",
