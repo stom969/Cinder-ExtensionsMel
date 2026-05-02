@@ -1,17 +1,17 @@
 __cinderExport = {
   id: "gocomics",
-  name: "GoComics Placeholder",
-  version: "9.9.9",
+  name: "GoComics Direct",
+  version: "1.0.0",
   icon: "📰",
-  description: "Placeholder test – should show a green square",
-  contentType: "manga",
+  description: "Direct download test – green square",
+  contentType: "comics",
 
   capabilities: {
     search: true,
-    discover: true,
-    manga: true,
-    download: false,
+    discover: false,
+    download: true,
     resolve: false,
+    manga: false,
   },
 
   LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
@@ -35,46 +35,8 @@ __cinderExport = {
       title: c.name,
       author: "",
       cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
-      format: "manga",
+      url: "https://via.placeholder.com/800x600/00ff00/000000?text=Direct+Download+Works!",  // HARDCODED PLACEHOLDER
+      format: "comics",
     }));
-  },
-
-  async getMangaDetails(id) {
-    return {
-      id: id,
-      title: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
-      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${id}`,
-      description: "",
-      author: "",
-      status: "ongoing",
-      genres: [],
-    };
-  },
-
-  async getChapters(mangaId) {
-    const chapters = [];
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const d = now.getDate();
-    for (let daysAgo = 0; daysAgo < 5; daysAgo++) {
-      const date = new Date(y, m, d - daysAgo);
-      const yy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, '0');
-      const dd = String(date.getDate()).padStart(2, '0');
-      chapters.push({
-        id: `${mangaId}/${yy}/${mm}/${dd}`,
-        title: `${yy}-${mm}-${dd}`,
-        chapterNumber: 0,
-        dateUploaded: date.toISOString().split('T')[0],
-        scanlator: "GoComics",
-      });
-    }
-    return chapters.reverse();
-  },
-
-  async getPages(chapterId) {
-    // Hardcoded bright green placeholder – no fetching
-    return [{ url: "https://via.placeholder.com/800x600/00ff00/000000?text=IT+WORKS!" }];
   }
 };
