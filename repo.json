@@ -15,7 +15,7 @@
 		{
     "id": "gocomics",
     "name": "GoComics",
-    "version": "1.0.0",
+    "version": "2.1.0",
     "description": "Read daily comic strips from GoComics.com",
     "contentType": "comics",
     "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/Gocomics.js",
