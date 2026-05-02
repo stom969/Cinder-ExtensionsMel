@@ -1,76 +1,69 @@
 __cinderExport = {
-  id: "gocomics-final",
-  name: "GoComics Final",
+  id: "gocomics-manga-test",
+  name: "GoComics Manga Test",
   version: "1.0.0",
   icon: "📰",
-  description: "Final test – direct download works",
-  contentType: "comics",
+  description: "Tests manga reader with placeholder image",
+  contentType: "manga",
 
   capabilities: {
     search: true,
     discover: false,
-    download: true,
+    manga: true,
+    download: false,
     resolve: false,
   },
 
-  async search(query, page) {
-    // Hardcoded single comic – no list
+  async search(query, page = 0) {
+    // Return a single fake comic for testing
     return [
       {
-        id: "calvinandhobbes",
-        title: "Calvin and Hobbes (Final Test)",
-        author: "",
-        cover: "https://avatar.amuniversal.com/feature_avatars/recommendation?feature=calvinandhobbes",
-        url: "https://via.placeholder.com/800x600/00ff00/000000?text=WORKS",  // hardcoded placeholder
-        format: "comics",
+        id: "test-comic",
+        title: "Test Comic (Manga Reader)",
+        cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
+        format: "manga",
       }
     ];
-  }
-};__cinderExport = {
-  id: "gocomics",
-  name: "GoComics Resolve",
-  version: "1.0.0",
-  icon: "📰",
-  description: "Resolve test – should show a red dot",
-  contentType: "comics",
-
-  capabilities: {
-    search: true,
-    discover: false,
-    download: false,
-    resolve: true,
   },
 
-  LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
-
-  async _fetchList() {
-    const res = await cinder.fetch(this.LIST_URL);
-    if (res.status !== 200) throw new Error("List fetch failed");
-    return JSON.parse(res.data);
-  },
-
-  async search(query, page = 0) {
-    const all = await this._fetchList();
-    const q = query.toLowerCase().trim();
-    let filtered = all;
-    if (q) filtered = all.filter(c => c.name && c.name.toLowerCase().includes(q));
-    const pageSize = 20;
-    const start = page * pageSize;
-    const paged = filtered.slice(start, start + pageSize);
-    return paged.map(c => ({
-      id: c.slug,
-      title: c.name,
-      author: "",
-      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
-      // NO url field
-      format: "comics",
-    }));
-  },
-
-  async resolve(item) {
-    // Return a hardcoded red pixel as data URL – no network needed
+  async getMangaDetails(id) {
     return {
-      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+      id: id,
+      title: "Test Comic",
+      cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
+      description: "A test comic",
+      author: "Test Author",
+      status: "ongoing",
+      genres: [],
     };
+  },
+
+  async getChapters(mangaId) {
+    // Return 2 fake chapters
+    return [
+      {
+        id: "chapter-1",
+        title: "Chapter 1",
+        chapterNumber: 1,
+        dateUploaded: "2025-05-01",
+        scanlator: "Test",
+      },
+      {
+        id: "chapter-2",
+        title: "Chapter 2",
+        chapterNumber: 2,
+        dateUploaded: "2025-05-02",
+        scanlator: "Test",
+      },
+    ];
+  },
+
+  async getPages(chapterId) {
+    // Return a placeholder image (real HTTP URL, not data URL)
+    return [
+      {
+        url: "https://via.placeholder.com/800x600/00ff00/ffffff?text=Chapter+" + chapterId,
+      }
+    ];
   }
 };
