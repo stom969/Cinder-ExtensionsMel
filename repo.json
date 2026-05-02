@@ -11,6 +11,16 @@
 			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
 			"minCinderVersion": "2.0.0"
 		},
+
+		{
+    "id": "gocomics",
+    "name": "GoComics",
+    "version": "1.0.0",
+    "description": "Read daily comic strips from GoComics.com",
+    "contentType": "comics",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/gocomics.js",
+    "minCinderVersion": "2.0.0"
+  },
 		{
 			"id": "readcomiconline",
 			"name": "ReadComicOnline",
