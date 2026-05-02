@@ -14,7 +14,7 @@ __cinderExport = {
   },
 
   // URL where the full comic list is hosted (will be replaced later)
-  LIST_URL: "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/comics.json",
+  LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
 
   async _fetchList() {
     const res = await cinder.fetch(this.LIST_URL);
