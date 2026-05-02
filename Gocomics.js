@@ -1,66 +1,136 @@
 __cinderExport = {
-  id: "gocomics-manga-test2",
-  name: "GoComics Manga Test 2",
+  id: "gocomics-working",
+  name: "GoComics",
   version: "1.0.0",
   icon: "📰",
-  description: "Tests manga reader with placehold.co",
+  description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
 
   capabilities: {
     search: true,
-    discover: false,
+    discover: true,
     manga: true,
     download: false,
     resolve: false,
   },
 
+  // URL where your full comic list is hosted
+  LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
+
+  _listCache: null,
+
+  async _fetchList() {
+    if (this._listCache) return this._listCache;
+    const res = await cinder.fetch(this.LIST_URL);
+    if (res.status !== 200) throw new Error("Failed to load comic list");
+    this._listCache = JSON.parse(res.data);
+    return this._listCache;
+  },
+
+  // ── Search ─────────────────────────────
   async search(query, page = 0) {
+    const all = await this._fetchList();
+    const q = query.toLowerCase().trim();
+    let filtered = all;
+    if (q) {
+      filtered = all.filter(c => c.name && c.name.toLowerCase().includes(q));
+    }
+    const pageSize = 20;
+    const start = page * pageSize;
+    const paged = filtered.slice(start, start + pageSize);
+    return paged.map(c => ({
+      id: c.slug,
+      title: c.name,
+      author: "",
+      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
+      format: "manga",
+    }));
+  },
+
+  // ── Discover ───────────────────────────
+  async getDiscoverSections() {
     return [
-      {
-        id: "test-comic",
-        title: "Test Comic (Manga Reader 2)",
-        cover: "https://placehold.co/150x200/cccccc/000000?text=Test",
-        format: "manga",
-      }
+      { id: "popular", title: "Popular Comics", icon: "🔥" },
+      { id: "all", title: "All Comics", icon: "📚" },
     ];
   },
 
+  async getDiscoverItems(sectionId, page = 0) {
+    // Both sections just return the full list for now
+    return await this.search("", page);
+  },
+
+  // ── Manga Details ─────────────────────
   async getMangaDetails(id) {
     return {
       id: id,
-      title: "Test Comic",
-      cover: "https://placehold.co/150x200/cccccc/000000?text=Test",
-      description: "A test comic",
-      author: "Test Author",
+      title: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${id}`,
+      description: "",
+      author: "",
       status: "ongoing",
       genres: [],
     };
   },
 
+  // ── Chapters (last 30 days) ───────────
   async getChapters(mangaId) {
-    return [
-      {
-        id: "chapter-1",
-        title: "Chapter 1",
-        chapterNumber: 1,
-        dateUploaded: "2025-05-01",
-        scanlator: "Test",
-      },
-      {
-        id: "chapter-2",
-        title: "Chapter 2",
-        chapterNumber: 2,
-        dateUploaded: "2025-05-02",
-        scanlator: "Test",
-      },
-    ];
+    const chapters = [];
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+    for (let daysAgo = 0; daysAgo < 30; daysAgo++) {
+      const date = new Date(y, m, d - daysAgo);
+      const yy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${yy}-${mm}-${dd}`;
+      chapters.push({
+        id: `${mangaId}/${yy}/${mm}/${dd}`,
+        title: dateStr,
+        chapterNumber: daysAgo,
+        dateUploaded: date.toISOString().split('T')[0],
+        scanlator: "GoComics",
+      });
+    }
+    return chapters.reverse();
   },
 
+  // ── Pages (scrape comic image) ────────
   async getPages(chapterId) {
-    return [
-      {
-        url: "https://placehold.co/800x600/00ff00/white?text=Chapter+" + chapterId,
+    const pageUrl = `https://www.gocomics.com/${chapterId}`;
+    const res = await cinder.fetch(pageUrl, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    if (res.status !== 200) throw new Error("Failed to load comic page");
+
+    const html = res.data;
+    const doc = cinder.parseHTML(html);
+
+    // 1. Try to find the comic image by its class pattern
+    let img = doc.querySelector('img[class*="Comic-module"][class*="comic__image"]');
+    if (img) {
+      const src = img.attr('src');
+      if (src) return [{ url: src }];
+    }
+
+    // 2. Fallback: any image from featureassets.gocomics.com
+    img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
+    if (img) {
+      const src = img.attr('src');
+      if (src) return [{ url: src }];
+    }
+
+    // 3. Last resort: find any image that looks like a comic strip
+    const allImgs = doc.querySelectorAll('img');
+    for (let i = 0; i < allImgs.length; i++) {
+      const src = allImgs[i].attr('src');
+      if (src && (src.includes('featureassets') || src.includes('comic'))) {
+        return [{ url: src }];
       }
-    ];
+    }
+
+    throw new Error("Could not find comic image");
   }
 };
