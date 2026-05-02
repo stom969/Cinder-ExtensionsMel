@@ -1,15 +1,15 @@
 __cinderExport = {
   id: "gocomics",
   name: "GoComics",
-  version: "1.3.0",
+  version: "1.5.0",
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
-  contentType: "manga",   // ← treat it as manga to get chapter list
+  contentType: "manga",
 
   capabilities: {
     search: true,
     discover: true,
-    manga: true,           // ← this enables getChapters / getPages
+    manga: true,
     download: false,
     resolve: false,
   },
@@ -25,7 +25,6 @@ __cinderExport = {
     return JSON.parse(res.data);
   },
 
-  // ── Search ─────────────────────────────
   async search(query, page = 0) {
     const all = await this._fetchList();
     const q = query.toLowerCase().trim();
@@ -40,19 +39,15 @@ __cinderExport = {
     const paged = filtered.slice(start, start + pageSize);
 
     return paged.map(c => ({
-      id: c.slug,           // this will be the "manga ID"
+      id: c.slug,
       title: c.name,
       author: "",
       cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
-      format: "manga",      // must be "manga" because contentType is manga
+      format: "manga",
     }));
   },
 
-  // ── Manga Details ──────────────────────
   async getMangaDetails(id) {
-    // `id` is the comic slug (e.g. "calvinandhobbes")
-    // Return basic info. This won’t be shown in full detail unless needed,
-    // but Cinder expects it.
     return {
       id: id,
       title: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
@@ -64,14 +59,11 @@ __cinderExport = {
     };
   },
 
-  // ── Chapters (recent dates) ───────────
   async getChapters(mangaId) {
-    // `mangaId` is the comic slug
-    // Build a list of the last 30 days as chapters
     const chapters = [];
     const now = new Date();
     const y = now.getFullYear();
-    const m = now.getMonth();     // 0-indexed
+    const m = now.getMonth();
     const d = now.getDate();
 
     for (let daysAgo = 0; daysAgo < 30; daysAgo++) {
@@ -80,47 +72,51 @@ __cinderExport = {
       const mm = String(date.getMonth() + 1).padStart(2, '0');
       const dd = String(date.getDate()).padStart(2, '0');
       const dateStr = `${yy}-${mm}-${dd}`;
-
-      // Use the date string as the chapter ID (combined with the slug)
       const chapterId = `${mangaId}/${yy}/${mm}/${dd}`;
       chapters.push({
         id: chapterId,
         title: dateStr,
-        chapterNumber: 0,     // not really used, but required
+        chapterNumber: 0,
         dateUploaded: date.toISOString().split('T')[0],
-        scanlator: "GoComics", // optional
+        scanlator: "GoComics",
       });
     }
 
-    // Return in chronological order (oldest first for manga reader)
     return chapters.reverse();
   },
 
-  // ── Pages (single comic image) ─────────
   async getPages(chapterId) {
-    // chapterId is like "calvinandhobbes/2025/05/02"
-    // Build the full GoComics page URL
     const pageUrl = `https://www.gocomics.com/${chapterId}`;
 
     const res = await cinder.fetch(pageUrl, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
     if (res.status !== 200) {
-      throw new Error("Failed to load comic page");
+      throw new Error("Failed to load comic page (status " + res.status + ")");
     }
 
     const html = res.data;
+    const doc = cinder.parseHTML(html);
 
-    // Try to find the comic image
-    let imgMatch = html.match(/<img\s[^>]*class="img-fluid"[^>]*src="(https:\/\/[^"]+)"/i)
-                || html.match(/<picture[^>]*>.*?<img[^>]*src="(https:\/\/[^"]+)"/is)
-                || html.match(/<img[^>]*src="(https:\/\/[^"]+)"[^>]*>/i);
-
-    if (!imgMatch) {
-      throw new Error("Could not find comic image");
+    let img = doc.querySelector('.item-comic-image img');
+    if (img) {
+      const src = img.attr('src');
+      if (src) return [{ url: src }];
     }
 
-    // Return a single page
-    return [{ url: imgMatch[1] }];
+    img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
+    if (img) {
+      const src = img.attr('src');
+      if (src) return [{ url: src }];
+    }
+
+    img = doc.querySelector('picture img');
+    if (!img) img = doc.querySelector('img');
+    if (img) {
+      const src = img.attr('src');
+      if (src) return [{ url: src }];
+    }
+
+    throw new Error("Could not find comic image");
   }
 };
