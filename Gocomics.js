@@ -11,9 +11,10 @@ __cinderExport = {
     discover: true,
     download: false,
     resolve: true,
+    searchDownloads: false,   // explicitly hide “Search Downloads”
   },
 
-  // URL where the full comic list is hosted (will be replaced later)
+  // URL where the full comic list is hosted
   LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
 
   async _fetchList() {
@@ -38,23 +39,24 @@ __cinderExport = {
     const paged = filtered.slice(start, start + pageSize);
 
     return paged.map(c => ({
-      id: c.slug,
+      id: c.slug,                                    // ← only ID, no URL
       title: c.name,
       author: "",
       cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
-      url: `https://www.gocomics.com/${c.slug}`,
+      // NO url field
       format: "comics",
     }));
   },
 
   async resolve(item) {
+    // item.id is the slug (e.g. "calvinandhobbes")
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
-    const url = `https://www.gocomics.com/${item.id}/${y}/${m}/${d}`;
+    const pageUrl = `https://www.gocomics.com/${item.id}/${y}/${m}/${d}`;
 
-    const res = await cinder.fetch(url, {
+    const res = await cinder.fetch(pageUrl, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
     if (res.status !== 200) {
