@@ -14,7 +14,7 @@
 
 		{
 		    "id": "gocomics",
-			"name": "GoComics Diag",
+			"name": "GoComics Placeholder",
 		    "version": "9.9.9",
 		    "description": "Read daily comic strips from GoComics.com",
 		    "contentType": "comics",
