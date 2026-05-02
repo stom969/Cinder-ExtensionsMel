@@ -1,5 +1,5 @@
 __cinderExport = {
-  id: "gocomics-working",
+  id: "gocomics",
   name: "GoComics",
   version: "1.0.0",
   icon: "📰",
