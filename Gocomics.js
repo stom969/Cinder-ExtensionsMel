@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "gocomics",
   name: "GoComics",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
@@ -14,7 +14,6 @@ __cinderExport = {
     resolve: false,
   },
 
-  // URL where your full comic list is hosted
   LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
 
   _listCache: null,
@@ -27,7 +26,6 @@ __cinderExport = {
     return this._listCache;
   },
 
-  // ── Search ─────────────────────────────
   async search(query, page = 0) {
     const all = await this._fetchList();
     const q = query.toLowerCase().trim();
@@ -47,7 +45,6 @@ __cinderExport = {
     }));
   },
 
-  // ── Discover ───────────────────────────
   async getDiscoverSections() {
     return [
       { id: "popular", title: "Popular Comics", icon: "🔥" },
@@ -56,11 +53,9 @@ __cinderExport = {
   },
 
   async getDiscoverItems(sectionId, page = 0) {
-    // Both sections just return the full list for now
     return await this.search("", page);
   },
 
-  // ── Manga Details ─────────────────────
   async getMangaDetails(id) {
     return {
       id: id,
@@ -73,7 +68,6 @@ __cinderExport = {
     };
   },
 
-  // ── Chapters (last 30 days) ───────────
   async getChapters(mangaId) {
     const chapters = [];
     const now = new Date();
@@ -97,7 +91,6 @@ __cinderExport = {
     return chapters.reverse();
   },
 
-  // ── Pages (scrape comic image) ────────
   async getPages(chapterId) {
     const pageUrl = `https://www.gocomics.com/${chapterId}`;
     const res = await cinder.fetch(pageUrl, {
@@ -108,29 +101,46 @@ __cinderExport = {
     const html = res.data;
     const doc = cinder.parseHTML(html);
 
-    // 1. Try to find the comic image by its class pattern
+    let imageUrl = null;
+
+    // 1. Try class pattern
     let img = doc.querySelector('img[class*="Comic-module"][class*="comic__image"]');
-    if (img) {
-      const src = img.attr('src');
-      if (src) return [{ url: src }];
+    if (img) imageUrl = img.attr('src');
+
+    // 2. Fallback: featureassets
+    if (!imageUrl) {
+      img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
+      if (img) imageUrl = img.attr('src');
     }
 
-    // 2. Fallback: any image from featureassets.gocomics.com
-    img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
-    if (img) {
-      const src = img.attr('src');
-      if (src) return [{ url: src }];
-    }
-
-    // 3. Last resort: find any image that looks like a comic strip
-    const allImgs = doc.querySelectorAll('img');
-    for (let i = 0; i < allImgs.length; i++) {
-      const src = allImgs[i].attr('src');
-      if (src && (src.includes('featureassets') || src.includes('comic'))) {
-        return [{ url: src }];
+    // 3. Last resort
+    if (!imageUrl) {
+      const allImgs = doc.querySelectorAll('img');
+      for (let i = 0; i < allImgs.length; i++) {
+        const src = allImgs[i].attr('src');
+        if (src && (src.includes('featureassets') || src.includes('comic'))) {
+          imageUrl = src;
+          break;
+        }
       }
     }
 
-    throw new Error("Could not find comic image");
+    if (!imageUrl) throw new Error("Could not find comic image");
+
+    // ── Fetch the image and convert to data URL ─────
+    const imageRes = await cinder.fetch(imageUrl, {
+      headers: {
+        "User-Agent": "CinderApp/1.0",
+        "Referer": pageUrl,                     // essential for GoComics CDN
+      }
+    });
+    if (imageRes.status !== 200) throw new Error("Failed to download comic image");
+
+    // Convert the binary data to base64
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(imageRes.data)));
+    const contentType = imageRes.headers?.["content-type"] || "image/png";
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    return [{ url: dataUrl }];
   }
 };
