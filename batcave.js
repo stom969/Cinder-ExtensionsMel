@@ -39,37 +39,44 @@ __cinderExport = {
     return results;
   },
 
-  // ── Chapters (uses JSON-LD static data) ─
+  // ── Chapters (JSON‑LD extraction) ──────
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
     const html = res.data;
-    // Extract the JSON-LD script containing "ComicSeries"
-    const jsonldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-    if (!jsonldMatch) return [];
 
-    let data;
-    try {
-      data = JSON.parse(jsonldMatch[1]);
-    } catch (e) {
-      return [];
+    // Find all JSON‑LD script blocks
+    const scriptRegex = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
+    let match;
+    let data = null;
+
+    while ((match = scriptRegex.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        // Check if this block contains a ComicSeries node
+        const graph = parsed["@graph"];
+        if (Array.isArray(graph) && graph.some(node => node["@type"] === "ComicSeries")) {
+          data = parsed;
+          break;
+        }
+      } catch (e) { /* skip malformed blocks */ }
     }
 
-    // Find the graph node with @type: ComicSeries
-    const graph = data["@graph"];
-    const seriesNode = graph.find(node => node["@type"] === "ComicSeries");
+    if (!data) return [];
+
+    const seriesNode = data["@graph"].find(node => node["@type"] === "ComicSeries");
     if (!seriesNode || !seriesNode.hasPart || !seriesNode.hasPart.itemListElement) return [];
 
     const chapters = seriesNode.hasPart.itemListElement.map(el => {
       const issue = el.item;
-      // URL is something like https://batcave.biz/reader/33758/246752
-      const id = new URL(issue.url).pathname; // "/reader/33758/246752"
+      // Strip the base URL to get the relative path
+      const id = issue.url.replace(this.BASE_URL, "");
       return {
         id: id,
         title: issue.name,
-        chapterNumber: parseInt(issue.issueNumber) || 0,
+        chapterNumber: parseInt(issue.issueNumber, 10) || 0,
         dateUploaded: "",
         scanlator: "BatCave",
       };
