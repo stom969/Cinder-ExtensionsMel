@@ -22,7 +22,7 @@
 		},
 
 		{
-		    "id": "toongod-test",
+		    "id": "toongod",
 		    "name": "ToonGod Test",
 		    "version": "1.0.1",
 		    "description": "Read comics from ToonGod.org",
