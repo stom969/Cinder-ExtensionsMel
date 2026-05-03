@@ -1,9 +1,9 @@
 __cinderExport = {
   id: "toongod",
-  name: "ToonGod Test",
-  version: "1.0.1",
+  name: "ToonGod HTML View",
+  version: "2.0.0",
   icon: "🌐",
-  description: "Hardcoded test – should show one result",
+  description: "Shows raw search HTML",
   contentType: "manga",
 
   capabilities: {
@@ -15,23 +15,30 @@ __cinderExport = {
   },
 
   async search(query, page = 0) {
-    // Return a single hardcoded comic for ANY query
-    return [
-      {
-        id: "/webtoon/test-comic/",
-        title: "Test Comic (Hardcoded)",
-        author: "",
-        cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
-        format: "manga",
-      }
-    ];
+    // Fetch the search page
+    const url = `https://www.toongod.org/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    const html = res.data || "";
+
+    // Save the HTML so we can display it in the pages
+    this._savedHtml = html;
+
+    // Return one dummy manga item
+    return [{
+      id: "diag",
+      title: `Tap to view HTML for "${query}"`,
+      cover: "",
+      format: "manga",
+    }];
   },
 
   async getMangaDetails(id) {
     return {
       id: id,
-      title: "Test Comic",
-      cover: "https://via.placeholder.com/150x200/cccccc/000000?text=Test",
+      title: "HTML View",
+      cover: "",
       description: "",
       author: "",
       status: "ongoing",
@@ -40,18 +47,19 @@ __cinderExport = {
   },
 
   async getChapters(mangaId) {
-    return [
-      {
-        id: "/webtoon/test-comic/chapter-1/",
-        title: "Chapter 1",
-        chapterNumber: 1,
-        dateUploaded: "",
-        scanlator: "Test",
-      }
-    ];
+    return [{
+      id: "show-html",
+      title: "Show Search HTML",
+      chapterNumber: 0,
+      dateUploaded: "",
+      scanlator: "",
+    }];
   },
 
   async getPages(chapterId) {
-    return [{ url: "https://placehold.co/800x600/00ff00/white?text=Test+Page" }];
+    // Convert the saved HTML to base64 for display
+    const text = this._savedHtml.substring(0, 3000); // first 3000 chars
+    const base64 = btoa(unescape(encodeURIComponent(text)));
+    return [{ url: `data:text/plain;base64,${base64}` }];
   }
 };
