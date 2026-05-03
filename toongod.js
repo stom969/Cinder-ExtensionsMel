@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Tests mobile User-Agent",
   contentType: "manga",
 
+  //Love my life
+
   capabilities: {
     search: true,
     discover: false,
