@@ -14,12 +14,12 @@
 		},
 
 				{
-			 	 "id": "literotica-epub",
-				  "name": "Literotica EPUB",
-				  "version": "1.2.0",
+			 	 "id": "literotica",
+				  "name": "Literotica",
+				  "version": "1.1.0",
 				  "description": "Read stories from Literotica.com as EPUB",
 				  "contentType": "books",
-				  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica_epub.js?v=1",
+				  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=12",
 				  "minCinderVersion": "2.0.0"
 		},
 		{
