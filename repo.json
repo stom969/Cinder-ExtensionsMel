@@ -22,11 +22,11 @@
   },
   {
     "id": "batcave-test",
-    "name": "Batcave Mini",
-    "version": "1.0.1",
+    "name": "Batcave ConnTest",
+    "version": "2.0.0",
     "description": "Tests batcave.biz connectivity",
     "contentType": "manga",
-    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=2",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=3",
     "minCinderVersion": "2.0.0"
   },
   {
