@@ -11,17 +11,15 @@
     "scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
     "minCinderVersion": "2.0.0"
   },
-
-		{
-	  "id": "gocomics",
-	  "name": "GoComics",
-	  "version": "1.0.0",
-	  "description": "Read daily comic strips from GoComics.com",
-	  "contentType": "manga",
-	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/gocomics.js?v=1",
-	  "minCinderVersion": "2.0.0"
-},
-		
+  {
+    "id": "gocomics",
+    "name": "GoComics",
+    "version": "1.0.0",
+    "description": "Read daily comic strips from GoComics.com",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/gocomics.js?v=1",
+    "minCinderVersion": "2.0.0"
+  },
   {
     "id": "readcomiconline",
     "name": "ReadComicOnline",
@@ -32,13 +30,13 @@
     "minCinderVersion": "2.0.0"
   },
   {
-	  "id": "batcave",
-	  "name": "BatCave",
-	  "version": "1.0.1",
-	  "description": "Read comics from batcave.biz",
-	  "contentType": "manga",
-	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave.js?v=final3",
-	  "minCinderVersion": "2.0.0"
+    "id": "batcave",
+    "name": "BatCave",
+    "version": "1.0.1",
+    "description": "Read comics from batcave.biz",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave.js?v=final3",
+    "minCinderVersion": "2.0.0"
   },
   {
     "id": "weebcentral",
