@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.0.3",
+  version: "1.0.4",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
@@ -67,62 +67,43 @@ __cinderExport = {
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
-    if (res.status !== 200) return [];
+    if (res.status !== 200) {
+      this._storyText = "ERROR: Page fetch failed (status " + res.status + ")";
+      return [{ id: "chapter-1", title: "Chapter 1", chapterNumber: 1, dateUploaded: "", scanlator: "" }];
+    }
 
     const doc = cinder.parseHTML(res.data);
     
-    // Try the class-based selector first
-    let contentEl = doc.querySelector("._introduction-wrap_86nfw_1");
-    
-    // If that fails, try broader selectors
+    // Try to find content
+    let contentEl = doc.querySelector("[class*='introduction']");
     if (!contentEl) {
-      contentEl = doc.querySelector("[class*='introduction']");
-    }
-    if (!contentEl) {
-      contentEl = doc.querySelector(".bn_B");
-    }
-    if (!contentEl) {
-      // Last resort: get all paragraph text from the page
+      // Try getting all paragraphs as fallback
       const paragraphs = doc.querySelectorAll("p");
-      this._storyText = "";
-      paragraphs.forEach(function(p) {
-        this._storyText += p.text().trim() + "\n\n";
-      });
+      this._storyText = "Found " + paragraphs.length + " paragraphs. ";
+      if (paragraphs.length > 0) {
+        this._storyText += "First paragraph: " + paragraphs[0].text().trim().substring(0, 100);
+      } else {
+        this._storyText += "Page HTML length: " + res.data.length;
+      }
     } else {
-      this._storyText = contentEl.text().trim();
+      const text = contentEl.text().trim();
+      this._storyText = "Content found! Length: " + text.length + " chars. Preview: " + text.substring(0, 100);
     }
 
-    return [
-      {
-        id: "chapter-1",
-        title: "Chapter 1",
-        chapterNumber: 1,
-        dateUploaded: "",
-        scanlator: "",
-      }
-    ];
+    return [{ id: "chapter-1", title: "Chapter 1", chapterNumber: 1, dateUploaded: "", scanlator: "" }];
   },
 
   async getPages(chapterId) {
-    // If we couldn't get text, fall back to test image
-    if (!this._storyText) {
-      return [{ url: "https://placehold.co/800x600/ff0000/white?text=No+content+found" }];
-    }
+    const displayText = this._storyText || "No text stored";
 
-    var escaped = this._storyText;
-    escaped = escaped.replace(/&/g, "&amp;");
-    escaped = escaped.replace(/</g, "&lt;");
-    escaped = escaped.replace(/>/g, "&gt;");
-    escaped = escaped.replace(/"/g, "&quot;");
+    // Create a small diagnostic image
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200">' +
+      '<rect width="100%" height="100%" fill="#1a1a2e"/>' +
+      '<text x="20" y="40" font-family="monospace" font-size="14" fill="#00ff00">' +
+      displayText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+      '</text></svg>';
 
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="' + (1200 + this._storyText.length) + '">';
-    svg += '<rect width="100%" height="100%" fill="#1a1a2e"/>';
-    svg += '<foreignObject width="100%" height="100%">';
-    svg += '<div xmlns="http://www.w3.org/1999/xhtml" style="color:#e0e0e0;font-family:Georgia;font-size:18px;padding:20px;white-space:pre-wrap;">';
-    svg += escaped;
-    svg += '</div></foreignObject></svg>';
-
-    var base64 = btoa(unescape(encodeURIComponent(svg)));
+    const base64 = btoa(unescape(encodeURIComponent(svg)));
     return [{ url: "data:image/svg+xml;base64," + base64 }];
   }
 };
