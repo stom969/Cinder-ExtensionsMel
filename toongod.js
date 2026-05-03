@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Tests fetchBrowser",
   contentType: "manga",
 
+  //love is temporary, memories are forever
+
   capabilities: {
     search: true,
     discover: false,
