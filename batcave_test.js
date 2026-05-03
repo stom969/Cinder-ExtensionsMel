@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read comics from batcave.biz",
   contentType: "manga",
 
+  //love love
+
   capabilities: {
     search: true,
     discover: true,
