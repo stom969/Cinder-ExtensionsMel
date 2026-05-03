@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "toongod",
   name: "ToonGod",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "🌐",
   description: "Read comics from ToonGod.org",
   contentType: "manga",
@@ -18,6 +18,7 @@ __cinderExport = {
 
   // ── Search ─────────────────────────────
   async search(query, page = 0) {
+    // The search URL you confirmed
     const url = `${this.BASE_URL}/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
     const res = await cinder.fetch(url, {
       headers: { "User-Agent": "CinderApp/1.0" }
@@ -28,22 +29,30 @@ __cinderExport = {
     const doc = cinder.parseHTML(html);
 
     const results = [];
-    doc.querySelectorAll(".c-tabs-item__content, .search-wrap .row .col-12").forEach((item) => {
-      const link = item.querySelector("a");
-      const titleEl = item.querySelector(".post-title, .manga-title, h3, h4");
-      const imgEl = item.querySelector("img");
+    // Each comic is inside this container
+    doc.querySelectorAll(".c-tabs-item__content").forEach((item) => {
+      // Find thumbnail link (cover + URL)
+      const thumbLink = item.querySelector(".tab-thumb a");
+      const titleEl = item.querySelector(".post-title h3 a");
 
-      if (link && titleEl) {
-        const id = link.attr("href").replace(this.BASE_URL, "").replace(/\/$/, "");
-        results.push({
-          id: id,
-          title: titleEl.text().trim(),
-          author: "",
-          cover: imgEl ? imgEl.attr("src") || imgEl.attr("data-src") : "",
-          url: link.attr("href"),
-          format: "manga",
-        });
-      }
+      if (!thumbLink || !titleEl) return;
+
+      const href = thumbLink.attr("href");
+      const title = titleEl.text().trim();
+      const id = href.replace(this.BASE_URL, "").replace(/\/$/, ""); // e.g., /webtoon/...
+
+      // Use data-src if present, else src
+      const imgEl = thumbLink.querySelector("img");
+      const cover = imgEl ? (imgEl.attr("data-src") || imgEl.attr("src")) : "";
+
+      results.push({
+        id: id,
+        title: title,
+        author: "",
+        cover: cover,
+        url: href,
+        format: "manga",
+      });
     });
 
     return results;
@@ -51,7 +60,7 @@ __cinderExport = {
 
   // ── Chapters ───────────────────────────
   async getChapters(mangaId) {
-    const url = `${this.BASE_URL}${mangaId}`; // mangaId is like /webtoon/beyond-imagination/
+    const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetch(url, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
@@ -61,23 +70,23 @@ __cinderExport = {
     const doc = cinder.parseHTML(html);
 
     const chapters = [];
-    // Common Madara chapter list selectors
-    const chapterItems = doc.querySelectorAll(".version-chap li, .wp-manga-chapter li, .listing-chapters_wrap li");
-    chapterItems.forEach((item, idx) => {
-      const link = item.querySelector("a");
-      if (link) {
-        const href = link.attr("href").replace(this.BASE_URL, "");
-        const title = link.text().trim() || `Chapter ${idx + 1}`;
-        const chapterNumber = parseFloat(title.replace("Chapter ", "")) || idx;
-        chapters.push({
-          id: href, // e.g., /webtoon/beyond-imagination/chapter-1/
-          title: title,
-          chapterNumber: chapterNumber,
-          dateUploaded: "",
-          scanlator: "ToonGod",
-        });
-      }
+    // Standard Madara chapter list
+    doc.querySelectorAll(".version-chap li a, .wp-manga-chapter a").forEach((link) => {
+      const href = link.attr("href");
+      const title = link.text().trim();
+      const id = href.replace(this.BASE_URL, ""); // /webtoon/.../chapter-1/
+      const chapterMatch = title.match(/Chapter\s+([\d.]+)/i);
+      const chapterNumber = chapterMatch ? parseFloat(chapterMatch[1]) : 0;
+
+      chapters.push({
+        id: id,
+        title: title || `Chapter ${chapters.length + 1}`,
+        chapterNumber: chapterNumber,
+        dateUploaded: "",
+        scanlator: "ToonGod",
+      });
     });
+
     return chapters.reverse(); // oldest first
   },
 
@@ -93,10 +102,9 @@ __cinderExport = {
     const doc = cinder.parseHTML(html);
 
     const pages = [];
-    // Look for images inside the reading area
-    const images = doc.querySelectorAll(".reading-content img, .page-break img, .entry-content img");
-    images.forEach((img) => {
-      let src = img.attr("src") || img.attr("data-src") || img.attr("data-lazy-src");
+    // Pages are inside .reading-content img (often use data-src)
+    doc.querySelectorAll(".reading-content img, .page-break img").forEach((img) => {
+      let src = img.attr("data-src") || img.attr("data-lazy-src") || img.attr("src");
       if (src && src.startsWith("http")) {
         pages.push({ url: src.trim() });
       }
@@ -117,8 +125,8 @@ __cinderExport = {
     const doc = cinder.parseHTML(html);
 
     const title = (doc.querySelector(".post-title h1") || doc.querySelector("h1"))?.text()?.trim() || id;
-    const cover = doc.querySelector(".summary_image img")?.attr("src") || "";
-    const desc = doc.querySelector(".description-summary .summary__content, .manga-excerpt")?.text()?.trim() || "";
+    const cover = doc.querySelector(".summary_image img")?.attr("data-src") || doc.querySelector(".summary_image img")?.attr("src") || "";
+    const desc = doc.querySelector(".description-summary .summary__content")?.text()?.trim() || "";
     const author = doc.querySelector(".author-content a")?.text()?.trim() || "";
 
     return {
@@ -141,12 +149,9 @@ __cinderExport = {
   },
 
   async getDiscoverItems(sectionId, page = 0) {
-    // For discover, we can fetch the homepage or a listing page
-    let endpoint = "";
+    let endpoint = "/";
     if (sectionId === "latest") {
-      endpoint = "/?s=&post_type=wp-manga&order=latest"; // just an example
-    } else {
-      endpoint = "/?s=&post_type=wp-manga&order=popular";
+      endpoint = "/page-template/latest/"; // adjust if needed
     }
     const url = `${this.BASE_URL}${endpoint}`;
     const res = await cinder.fetch(url, {
@@ -155,23 +160,24 @@ __cinderExport = {
     if (res.status !== 200) return [];
     const html = res.data;
     const doc = cinder.parseHTML(html);
-    // Reuse search parsing logic
     const results = [];
     doc.querySelectorAll(".c-tabs-item__content, .page-item-detail").forEach((item) => {
-      const link = item.querySelector("a");
-      const titleEl = item.querySelector(".post-title, h3, h4");
+      const thumbLink = item.querySelector("a");
+      const titleEl = item.querySelector(".post-title h3 a") || item.querySelector("h3 a");
+      if (!thumbLink || !titleEl) return;
+      const href = thumbLink.attr("href");
+      const title = titleEl.text().trim();
+      const id = href.replace(this.BASE_URL, "").replace(/\/$/, "");
       const imgEl = item.querySelector("img");
-      if (link && titleEl) {
-        const id = link.attr("href").replace(this.BASE_URL, "").replace(/\/$/, "");
-        results.push({
-          id: id,
-          title: titleEl.text().trim(),
-          author: "",
-          cover: imgEl ? imgEl.attr("src") || imgEl.attr("data-src") : "",
-          url: link.attr("href"),
-          format: "manga",
-        });
-      }
+      const cover = imgEl ? (imgEl.attr("data-src") || imgEl.attr("src")) : "";
+      results.push({
+        id: id,
+        title: title,
+        author: "",
+        cover: cover,
+        url: href,
+        format: "manga",
+      });
     });
     return results;
   }
