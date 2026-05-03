@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
-
-  //money
 
   capabilities: {
     search: true,
@@ -18,6 +16,8 @@ __cinderExport = {
 
   BASE_URL: "https://www.literotica.com",
   SEARCH_URL: "https://search.literotica.com",
+
+  _storyText: "",
 
   async search(query, page = 0) {
     const url = `${this.SEARCH_URL}/?query=${encodeURIComponent(query)}`;
@@ -65,6 +65,19 @@ __cinderExport = {
   },
 
   async getChapters(mangaId) {
+    // Fetch the story and store it
+    const url = `${this.BASE_URL}${mangaId}`;
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    if (res.status !== 200) return [];
+
+    const doc = cinder.parseHTML(res.data);
+    const contentEl = doc.querySelector("._introduction-wrap_86nfw_1");
+    if (!contentEl) return [];
+
+    this._storyText = contentEl.text().trim();
+
     return [
       {
         id: "chapter-1",
@@ -77,6 +90,26 @@ __cinderExport = {
   },
 
   async getPages(chapterId) {
-    return [{ url: "https://placehold.co/800x1200/1a1a2e/e0e0e0?text=Test" }];
+    if (!this._storyText) {
+      return [{ url: "https://placehold.co/800x600/ff0000/white?text=No+text" }];
+    }
+
+    // Escape XML special characters in the story text
+    var escaped = this._storyText;
+    escaped = escaped.replace(/&/g, "&amp;");
+    escaped = escaped.replace(/</g, "&lt;");
+    escaped = escaped.replace(/>/g, "&gt;");
+    escaped = escaped.replace(/"/g, "&quot;");
+
+    // Create an SVG with the text
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="' + (1200 + this._storyText.length) + '">';
+    svg += '<rect width="100%" height="100%" fill="#1a1a2e"/>';
+    svg += '<foreignObject width="100%" height="100%">';
+    svg += '<div xmlns="http://www.w3.org/1999/xhtml" style="color:#e0e0e0;font-family:Georgia;font-size:18px;padding:20px;white-space:pre-wrap;">';
+    svg += escaped;
+    svg += '</div></foreignObject></svg>';
+
+    var base64 = btoa(unescape(encodeURIComponent(svg)));
+    return [{ url: "data:image/svg+xml;base64," + base64 }];
   }
 };
