@@ -1,13 +1,10 @@
 __cinderExport = {
   id: "batcave",
   name: "BatCave",
-  version: "1.0.2",
+  version: "1.0.0",
   icon: "🦇",
   description: "Read comics from batcave.biz",
   contentType: "manga",
-
-  //love love
-
   capabilities: {
     search: true,
     discover: true,
@@ -15,7 +12,6 @@ __cinderExport = {
     download: false,
     resolve: false,
   },
-
   BASE_URL: "https://batcave.biz",
 
   // ── Search ─────────────────────────────
@@ -24,86 +20,62 @@ __cinderExport = {
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
-    const html = res.data;
-    const doc = cinder.parseHTML(html);
-
+    const doc = cinder.parseHTML(res.data);
     const results = [];
     doc.querySelectorAll(".readed.d-flex.short").forEach((card) => {
       const titleLink = card.querySelector("h2.readed__title a");
       const img = card.querySelector("a.readed__img img");
-
       if (!titleLink) return;
-
       const href = titleLink.attr("href");
       const title = titleLink.text().trim();
       const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
-
       results.push({
         id: href,
         title: title,
-        author: "",
         cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
-        url: this.BASE_URL + href,
         format: "manga",
       });
     });
-
     return results;
   },
 
-  // ── Chapters (regex on raw HTML) ───────
+  // ── Chapters (uses JSON-LD static data) ─
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
     const html = res.data;
+    // Extract the JSON-LD script containing "ComicSeries"
+    const jsonldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    if (!jsonldMatch) return [];
 
-    // Extract the window.__DATA__ object using regex
-    const dataMatch = html.match(/window\.__DATA__\s*=\s*({[\s\S]+?});/);
-    if (!dataMatch) {
-      // If not found, show partial page in chapter title for debugging
-      return [{
-        id: "diag",
-        title: `No __DATA__ found. HTML length: ${html.length}`,
-        chapterNumber: 0,
-        dateUploaded: "",
-        scanlator: "",
-      }];
-    }
-
-    let dataObj;
+    let data;
     try {
-      dataObj = JSON.parse(dataMatch[1]);
+      data = JSON.parse(jsonldMatch[1]);
     } catch (e) {
-      return [{
-        id: "diag",
-        title: `JSON parse error: ${e.message.substring(0, 80)}`,
-        chapterNumber: 0,
-        dateUploaded: "",
-        scanlator: "",
-      }];
+      return [];
     }
 
-    if (!dataObj.chapters || !dataObj.chapters.length) {
-      return [{
-        id: "diag",
-        title: "Data found but no chapters array",
-        chapterNumber: 0,
+    // Find the graph node with @type: ComicSeries
+    const graph = data["@graph"];
+    const seriesNode = graph.find(node => node["@type"] === "ComicSeries");
+    if (!seriesNode || !seriesNode.hasPart || !seriesNode.hasPart.itemListElement) return [];
+
+    const chapters = seriesNode.hasPart.itemListElement.map(el => {
+      const issue = el.item;
+      // URL is something like https://batcave.biz/reader/33758/246752
+      const id = new URL(issue.url).pathname; // "/reader/33758/246752"
+      return {
+        id: id,
+        title: issue.name,
+        chapterNumber: parseInt(issue.issueNumber) || 0,
         dateUploaded: "",
-        scanlator: "",
-      }];
-    }
+        scanlator: "BatCave",
+      };
+    }).reverse(); // Oldest first
 
-    const chapters = dataObj.chapters.map((ch) => ({
-      id: `/reader/${dataObj.news_id}/${ch.id}`,
-      title: ch.title,
-      chapterNumber: parseFloat(ch.posi) || 0,
-      dateUploaded: ch.date || "",
-      scanlator: "BatCave",
-    }));
-
-    return chapters.reverse();
+    return chapters;
   },
 
   // ── Pages ──────────────────────────────
@@ -112,17 +84,12 @@ __cinderExport = {
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
-    const html = res.data;
-    const doc = cinder.parseHTML(html);
+    const doc = cinder.parseHTML(res.data);
     const pages = [];
-
-    doc.querySelectorAll("img.reader__item").forEach((img) => {
+    doc.querySelectorAll("img.reader__item").forEach(img => {
       const src = img.attr("src");
-      if (src && src.startsWith("http")) {
-        pages.push({ url: src.trim() });
-      }
+      if (src && src.startsWith("http")) pages.push({ url: src.trim() });
     });
-
     return pages;
   },
 
@@ -130,19 +97,16 @@ __cinderExport = {
   async getMangaDetails(id) {
     const url = `${this.BASE_URL}${id}`;
     const res = await cinder.fetchBrowser(url);
-    if (res.status !== 200) throw new Error("Failed to load details");
+    if (res.status !== 200) throw new Error("Failed");
 
-    const html = res.data;
-    const doc = cinder.parseHTML(html);
-
+    const doc = cinder.parseHTML(res.data);
     const title = doc.querySelector("h1")?.text()?.trim() || id;
-    const coverImg = doc.querySelector(".page__poster img, .readed__img img");
-    const cover = coverImg ? (coverImg.attr("src") || coverImg.attr("data-src")) : "";
+    const img = doc.querySelector(".page__poster img");
+    const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
     const desc = doc.querySelector(".page__text.full-text")?.text()?.trim() || "";
-
+    
     return {
-      id: id,
-      title: title,
+      id, title,
       cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
       description: desc,
       author: "",
@@ -153,21 +117,15 @@ __cinderExport = {
 
   // ── Discover ───────────────────────────
   async getDiscoverSections() {
-    return [
-      { id: "latest", title: "Latest Updates", icon: "🆕" },
-    ];
+    return [{ id: "latest", title: "Latest Updates", icon: "🆕" }];
   },
-
   async getDiscoverItems(sectionId, page = 0) {
     const url = this.BASE_URL;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
-
-    const html = res.data;
-    const doc = cinder.parseHTML(html);
+    const doc = cinder.parseHTML(res.data);
     const results = [];
-
-    doc.querySelectorAll(".readed.d-flex.short").forEach((card) => {
+    doc.querySelectorAll(".readed.d-flex.short").forEach(card => {
       const titleLink = card.querySelector("h2.readed__title a");
       const img = card.querySelector("a.readed__img img");
       if (!titleLink) return;
@@ -176,14 +134,11 @@ __cinderExport = {
       const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
       results.push({
         id: href,
-        title: title,
-        author: "",
+        title,
         cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
-        url: this.BASE_URL + href,
         format: "manga",
       });
     });
-
     return results;
   }
 };
