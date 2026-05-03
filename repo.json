@@ -15,10 +15,10 @@
 				{
 			  "id": "literotica",
 			  "name": "Literotica",
-			  "version": "1.0.3",
+			  "version": "1.0.4",
 			  "description": "Read stories from Literotica.com",
 			  "contentType": "manga",
-			  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=9",
+			  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=10",
 			  "minCinderVersion": "2.0.0"
 		},
 		{
