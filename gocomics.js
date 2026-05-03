@@ -6,8 +6,6 @@ __cinderExport = {
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
 
-  //love love
-  
   capabilities: {
     search: true,
     discover: true,
@@ -97,17 +95,15 @@ __cinderExport = {
     return chapters.reverse();
   },
 
-  // ── Pages (fetchBrowser to get image) ─
-    async getPages(chapterId) {
+  // ── Pages (return image URL directly) ──
+  async getPages(chapterId) {
     const pageUrl = `https://www.gocomics.com/${chapterId}`;
 
-    // Fetch the comic page using fetchBrowser
     const pageRes = await cinder.fetchBrowser(pageUrl);
     if (pageRes.status !== 200) throw new Error("Failed to load comic page");
 
     const doc = cinder.parseHTML(pageRes.data);
 
-    // Find the comic image
     let img = doc.querySelector('img[class*="Comic-module"][class*="comic__image"]');
     if (!img) img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
     if (!img) {
@@ -125,20 +121,6 @@ __cinderExport = {
     const imageUrl = img.attr('src');
     if (!imageUrl) throw new Error("Image URL not found");
 
-    // Return the URL directly — no conversion
     return [{ url: imageUrl }];
-  }
-
-    // 3. Convert to base64 data URL
-    let base64;
-    if (typeof imgRes.data === "string") {
-      base64 = btoa(unescape(encodeURIComponent(imgRes.data)));
-    } else {
-      base64 = btoa(String.fromCharCode(...new Uint8Array(imgRes.data)));
-    }
-
-    const contentType = imgRes.headers?.["content-type"] || "image/png";
-    const dataUrl = `data:${contentType};base64,${base64}`;
-    return [{ url: dataUrl }];
   }
 };
