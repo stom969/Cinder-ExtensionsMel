@@ -1,21 +1,23 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "2.0.1",
+  version: "3.0.0",
   icon: "📖",
-  description: "Read stories from Literotica.com (EPUB upload)",
-  contentType: "books",
+  description: "Read stories from Literotica.com",
+  contentType: "manga",
 
   capabilities: {
     search: true,
     discover: false,
-    download: true,
-    resolve: true,
-    manga: false,
+    manga: true,
+    download: false,
+    resolve: false,
   },
 
   BASE_URL: "https://www.literotica.com",
   SEARCH_URL: "https://search.literotica.com",
+
+  _storyChunks: [],
 
   async search(query, page = 0) {
     const url = `${this.SEARCH_URL}/?query=${encodeURIComponent(query)}`;
@@ -43,197 +45,119 @@ __cinderExport = {
         title: title,
         author: author,
         cover: "",
-        url: `${this.BASE_URL}${href}`,
-        format: "books",
+        format: "manga",
       });
     });
 
     return results;
   },
 
-  async resolve(item) {
-    // 1. Fetch the story page
-    const pageRes = await cinder.fetch(item.url, {
+  async getMangaDetails(id) {
+    return {
+      id: id,
+      title: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+      cover: "",
+      description: "",
+      author: "",
+      status: "complete",
+      genres: [],
+    };
+  },
+
+  async getChapters(mangaId) {
+    const url = `${this.BASE_URL}${mangaId}`;
+    const res = await cinder.fetch(url, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
-    if (pageRes.status !== 200) throw new Error("Failed to load story page");
+    if (res.status !== 200) return [];
 
-    const doc = cinder.parseHTML(pageRes.data);
-    const title = doc.querySelector("h1")?.text()?.trim() || "Untitled";
-    const author = doc.querySelector('a[href*="/authors/"]')?.text()?.trim() || "Unknown";
-
-    let contentHtml = "";
+    const doc = cinder.parseHTML(res.data);
     const contentEl = doc.querySelector("[class*='introduction']");
-    if (contentEl) {
-      contentHtml = contentEl.html() || contentEl.text();
-    } else {
-      const paragraphs = doc.querySelectorAll("p");
-      paragraphs.forEach(p => {
-        contentHtml += "<p>" + p.text().trim() + "</p>";
+    if (!contentEl) return [];
+
+    const fullText = contentEl.text().trim();
+    const title = doc.querySelector("h1")?.text()?.trim() || "Story";
+
+    // Split into chunks of ~500 characters for small, reliable SVGs
+    const chunkSize = 500;
+    this._storyChunks = [];
+    const chapters = [];
+
+    for (let i = 0; i < fullText.length; i += chunkSize) {
+      const chunk = fullText.substring(i, i + chunkSize);
+      this._storyChunks.push(chunk);
+      chapters.push({
+        id: `page-${i}`,
+        title: `${title} (Page ${Math.floor(i / chunkSize) + 1})`,
+        chapterNumber: Math.floor(i / chunkSize) + 1,
+        dateUploaded: "",
+        scanlator: "",
       });
     }
 
-    if (!contentHtml) throw new Error("No story content found");
+    return chapters;
+  },
 
-    // 2. Build EPUB
-    const epubBytes = this._buildEpub(title, author, contentHtml);
+  async getPages(chapterId) {
+    const startIdx = parseInt(chapterId.replace("page-", ""));
+    const pageIndex = Math.floor(startIdx / 500);  // chunkSize is 500
+    if (pageIndex < 0 || pageIndex >= this._storyChunks.length) return [];
 
-    // 3. Upload to 0x0.st
-    const boundary = "----Cinder" + Math.random().toString(36).substring(2);
-    const body = this._multipartBody(boundary, "file", title.replace(/[^a-z0-9]/gi, "_") + ".epub", epubBytes, "application/epub+zip");
+    const text = this._storyChunks[pageIndex];
+    const escapedText = this._escapeXml(text);
 
-    const uploadRes = await cinder.fetch("https://0x0.st", {
-      method: "POST",
-      headers: {
-        "Content-Type": "multipart/form-data; boundary=" + boundary,
-      },
-      body: body,
-    });
+    // Build a simple SVG with <tspan> lines (max 60 chars per line)
+    const lines = this._wrapText(escapedText, 60);
+    let y = 40;
+    const lineHeight = 24;
+    const tspanElements = lines.map(line => {
+      const tspan = `<tspan x="20" dy="${y === 40 ? 0 : lineHeight}">${line}</tspan>`;
+      y += lineHeight;
+      return tspan;
+    }).join('');
 
-    // 0x0.st returns the URL as plain text (or an error message)
-    if (uploadRes.status === 200 && uploadRes.data && uploadRes.data.startsWith("http")) {
-      return { url: uploadRes.data.trim() };
+    const svgHeight = Math.max(200, y + 40);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${svgHeight}">
+      <rect width="100%" height="100%" fill="#1a1a2e"/>
+      <text font-family="monospace" font-size="16" fill="#e0e0e0" xml:space="preserve">
+        ${tspanElements}
+      </text>
+    </svg>`;
+
+    const base64 = btoa(unescape(encodeURIComponent(svg)));
+    // Add a timestamp to bust any caching
+    return [{ url: `data:image/svg+xml;base64,${base64}?ts=${Date.now()}` }];
+  },
+
+  // Helper: wrap text into lines of maxLen characters
+  _wrapText(text, maxLen) {
+    const words = text.split(/\s+/);
+    const lines = [];
+    let currentLine = "";
+
+    for (const word of words) {
+      if (word.length > maxLen) {
+        // If a single word is longer than maxLen, split it forcibly
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = "";
+        }
+        for (let i = 0; i < word.length; i += maxLen) {
+          lines.push(word.substring(i, i + maxLen));
+        }
+      } else if ((currentLine + " " + word).trim().length > maxLen) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = (currentLine + " " + word).trim();
+      }
     }
-
-    // Fallback: try data URL (may not work in Cinder but last resort)
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(epubBytes)));
-    return { url: "data:application/epub+zip;base64," + base64 };
+    if (currentLine) lines.push(currentLine);
+    return lines.length ? lines : [text]; // fallback
   },
 
-  _multipartBody(boundary, fieldName, fileName, fileBytes, mimeType) {
-    const encoder = new TextEncoder();
-    const parts = [];
-
-    parts.push(encoder.encode("--" + boundary + "\r\n"));
-    parts.push(encoder.encode("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + fileName + "\"\r\n"));
-    parts.push(encoder.encode("Content-Type: " + mimeType + "\r\n\r\n"));
-    parts.push(fileBytes);
-    parts.push(encoder.encode("\r\n--" + boundary + "--\r\n"));
-
-    let totalLength = 0;
-    for (const p of parts) totalLength += p.length;
-    const result = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const p of parts) {
-      result.set(p, offset);
-      offset += p.length;
-    }
-    return result;
-  },
-
-  _buildEpub(title, author, bodyHtml) {
-    const mimetype = "application/epub+zip";
-    const container = '<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>';
-    const opf = `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="2.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${this._escapeXml(title)}</dc:title><dc:creator>${this._escapeXml(author)}</dc:creator><dc:language>en</dc:language><dc:identifier id="bookid">${Date.now()}</dc:identifier></metadata><manifest><item id="html" href="content.html" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="html"/></spine></package>`;
-    const content = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${this._escapeXml(title)}</title></head><body>${bodyHtml}</body></html>`;
-
-    const files = {
-      "mimetype": mimetype,
-      "META-INF/container.xml": container,
-      "content.opf": opf,
-      "content.html": content
-    };
-
-    const zipParts = [];
-    let offset = 0;
-    const fileEntries = [];
-
-    for (const [name, data] of Object.entries(files)) {
-      const nameBytes = this._strToBytes(name);
-      const dataBytes = this._strToBytes(data);
-      const header = this._createLocalFileHeader(nameBytes, dataBytes);
-      zipParts.push(header);
-      zipParts.push(dataBytes);
-      fileEntries.push({ nameBytes, dataBytes, offset, header });
-      offset += header.length + dataBytes.length;
-    }
-
-    const centralDir = [];
-    let centralOffset = offset;
-    for (const entry of fileEntries) {
-      const cdHeader = this._createCentralDirectoryHeader(entry.nameBytes, entry.dataBytes, entry.offset);
-      centralDir.push(cdHeader);
-      offset += cdHeader.length;
-    }
-    const centralDirBytes = new Uint8Array(centralDir.flat());
-
-    const eocd = this._createEOCD(fileEntries.length, centralDirBytes.length, centralOffset);
-
-    const totalSize = zipParts.flat().length + centralDirBytes.length + eocd.length;
-    const zipArray = new Uint8Array(totalSize);
-    let pos = 0;
-    for (const part of zipParts) {
-      zipArray.set(part, pos);
-      pos += part.length;
-    }
-    zipArray.set(centralDirBytes, pos);
-    pos += centralDirBytes.length;
-    zipArray.set(eocd, pos);
-
-    return zipArray;
-  },
-
-  _createLocalFileHeader(nameBytes, dataBytes) {
-    const header = new Uint8Array(30 + nameBytes.length);
-    const view = new DataView(header.buffer);
-    view.setUint32(0, 0x04034b50, true);
-    view.setUint16(4, 20, true);
-    view.setUint16(6, 0, true);
-    view.setUint16(8, 0, true);
-    view.setUint16(10, 0, true);
-    view.setUint16(12, 0, true);
-    view.setUint32(14, 0, true);
-    view.setUint32(18, dataBytes.length, true);
-    view.setUint32(22, dataBytes.length, true);
-    view.setUint16(26, nameBytes.length, true);
-    view.setUint16(28, 0, true);
-    header.set(nameBytes, 30);
-    return header;
-  },
-
-  _createCentralDirectoryHeader(nameBytes, dataBytes, localOffset) {
-    const header = new Uint8Array(46 + nameBytes.length);
-    const view = new DataView(header.buffer);
-    view.setUint32(0, 0x02014b50, true);
-    view.setUint16(4, 20, true);
-    view.setUint16(6, 20, true);
-    view.setUint16(8, 0, true);
-    view.setUint16(10, 0, true);
-    view.setUint16(12, 0, true);
-    view.setUint16(14, 0, true);
-    view.setUint32(16, 0, true);
-    view.setUint32(20, dataBytes.length, true);
-    view.setUint32(24, dataBytes.length, true);
-    view.setUint16(28, nameBytes.length, true);
-    view.setUint16(30, 0, true);
-    view.setUint16(32, 0, true);
-    view.setUint16(34, 0, true);
-    view.setUint16(36, 0, true);
-    view.setUint32(38, 0, true);
-    view.setUint32(42, localOffset, true);
-    header.set(nameBytes, 46);
-    return header;
-  },
-
-  _createEOCD(numEntries, cdSize, cdOffset) {
-    const eocd = new Uint8Array(22);
-    const view = new DataView(eocd.buffer);
-    view.setUint32(0, 0x06054b50, true);
-    view.setUint16(4, 0, true);
-    view.setUint16(6, 0, true);
-    view.setUint16(8, numEntries, true);
-    view.setUint16(10, numEntries, true);
-    view.setUint32(12, cdSize, true);
-    view.setUint32(16, cdOffset, true);
-    view.setUint16(20, 0, true);
-    return eocd;
-  },
-
-  _strToBytes(str) {
-    return new TextEncoder().encode(str);
-  },
-
+  // Helper: escape XML special characters
   _escapeXml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   }
 };
