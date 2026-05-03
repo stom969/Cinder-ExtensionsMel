@@ -23,11 +23,11 @@
 
 		{
 		    "id": "toongod",
-		    "name": "ToonGod FetchCheck",
+		    "name": "ToonGod BrowserFetch",
 		    "version": "4.0.0",
 		    "description": "Read comics from ToonGod.org",
 		    "contentType": "manga",
-		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js?v=5",
+		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js?v=6",
 		    "minCinderVersion": "2.0.0"
 		  },
 
