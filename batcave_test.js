@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "batcave",
   name: "BatCave",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "🦇",
   description: "Read comics from batcave.biz",
   contentType: "manga",
@@ -32,12 +32,12 @@ __cinderExport = {
 
       if (!titleLink) return;
 
-      const href = titleLink.attr("href"); // e.g., "/33758-batman-2025.html"
+      const href = titleLink.attr("href");
       const title = titleLink.text().trim();
       const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
 
       results.push({
-        id: href, // used as manga ID
+        id: href,
         title: title,
         author: "",
         cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
@@ -49,47 +49,57 @@ __cinderExport = {
     return results;
   },
 
-  // ── Chapters ───────────────────────────
+  // ── Chapters (using embedded JSON) ─────
   async getChapters(mangaId) {
-    // mangaId is the comic page path, e.g., "/33758-batman-2025.html"
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
     const html = res.data;
+    const doc = cinder.parseHTML(html);
 
-    // Extract window.__DATA__ JSON
-    const dataMatch = html.match(/window\.__DATA__\s*=\s*({.+?});\s*<\/script>/s);
-    if (!dataMatch) return [];
+    // 1. Try to find the script containing window.__DATA__
+    const scripts = doc.querySelectorAll("script");
+    let dataObj = null;
 
-    let comicData;
-    try {
-      comicData = JSON.parse(dataMatch[1]);
-    } catch (e) {
-      return [];
+    for (let i = 0; i < scripts.length; i++) {
+      const text = scripts[i].textContent || "";
+      const match = text.match(/window\.__DATA__\s*=\s*({.+?\});/);
+      if (match) {
+        try {
+          dataObj = JSON.parse(match[1]);
+          break;
+        } catch (e) {
+          // continue searching
+        }
+      }
     }
 
-    if (!comicData.chapters) return [];
-
-    const chapters = comicData.chapters.map((ch) => {
-      // ch: {id, posi, pages, title, date}
-      const chapterId = `/reader/${comicData.news_id}/${ch.id}`; // e.g., /reader/33758/246752
-      return {
-        id: chapterId,
+    // 2. If we found the data, build chapters from it
+    if (dataObj && dataObj.chapters) {
+      const chapters = dataObj.chapters.map((ch) => ({
+        id: `/reader/${dataObj.news_id}/${ch.id}`,
         title: ch.title,
         chapterNumber: parseFloat(ch.posi) || 0,
         dateUploaded: ch.date || "",
         scanlator: "BatCave",
-      };
-    });
+      }));
+      // Reverse: oldest first (posi 1 = first issue)
+      return chapters.reverse();
+    }
 
-    // Reverse to show oldest first (posi is issue number, 1 is oldest)
-    return chapters.reverse();
+    // 3. Fallback: if no data, return a diagnostic chapter
+    return [{
+      id: "diag",
+      title: "Could not find chapter data",
+      chapterNumber: 0,
+      dateUploaded: "",
+      scanlator: "",
+    }];
   },
 
   // ── Pages ──────────────────────────────
   async getPages(chapterId) {
-    // chapterId is the reader URL, e.g., "/reader/33758/246752"
     const url = `${this.BASE_URL}${chapterId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
