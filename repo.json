@@ -3,15 +3,6 @@
 	"author": "stom969",
 	"extensions": [
 		[
-  {
-    "id": "toongod",
-    "name": "ToonGod",
-    "version": "1.0.0",
-    "description": "Read comics from ToonGod.org",
-    "contentType": "manga",
-    "scriptUrl": "http://localhost:8000/toongod.js",
-    "minCinderVersion": "2.0.0"
-  },
 
 		{
     "id": "toongod",
