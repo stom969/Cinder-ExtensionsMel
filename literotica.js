@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.0.5",
+  version: "1.0.6",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
@@ -19,7 +19,6 @@ __cinderExport = {
 
   _currentChunks: [],
 
-  // ── Search ─────────────────────────────
   async search(query, page = 0) {
     const url = `${this.SEARCH_URL}/?query=${encodeURIComponent(query)}`;
     const res = await cinder.fetch(url, {
@@ -53,7 +52,6 @@ __cinderExport = {
     return results;
   },
 
-  // ── Manga Details ──────────────────────
   async getMangaDetails(id) {
     return {
       id: id,
@@ -66,7 +64,6 @@ __cinderExport = {
     };
   },
 
-  // ── Chapters (split text into chunks) ──
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetch(url, {
@@ -75,13 +72,12 @@ __cinderExport = {
     if (res.status !== 200) return [];
 
     const doc = cinder.parseHTML(res.data);
-    const contentEl = doc.querySelector('._introduction-wrap_86nfw_1');
+    const contentEl = doc.querySelector("._introduction-wrap_86nfw_1");
     if (!contentEl) return [];
 
     const fullText = contentEl.text().trim();
     const title = doc.querySelector("h1")?.text()?.trim() || "Story";
 
-    // Split into ~1500 character chunks for readable pages
     const chunkSize = 1500;
     this._currentChunks = [];
     const chapters = [];
@@ -90,8 +86,8 @@ __cinderExport = {
       const chunk = fullText.substring(i, i + chunkSize);
       this._currentChunks.push(chunk);
       chapters.push({
-        id: `chunk-${i}`,
-        title: `${title} (Page ${Math.floor(i / chunkSize) + 1})`,
+        id: "chunk-" + i,
+        title: title + " (Page " + (Math.floor(i / chunkSize) + 1) + ")",
         chapterNumber: Math.floor(i / chunkSize) + 1,
         dateUploaded: "",
         scanlator: "",
@@ -101,41 +97,36 @@ __cinderExport = {
     return chapters;
   },
 
-  // ── Pages (generate text images) ───────
   async getPages(chapterId) {
-    const index = this._currentChunks.findIndex((_, i) => `chunk-${i * 1500}` === chapterId);
-    if (index === -1) return [];
+    // Extract the index from the chapterId
+    const match = chapterId.match(/^chunk-(\d+)$/);
+    if (!match) return [];
 
-    const text = this._currentChunks[index];
+    const startIdx = parseInt(match[1]);
+    const chunkIndex = this._currentChunks.findIndex((chunk, i) => i * 1500 === startIdx);
+    if (chunkIndex === -1) return [];
 
-    // Use a text-to-image service to render the text
-    // We'll use a simple approach: create an SVG with the text and convert to a data URL
-    const lines = text.split('\n');
-    const svgLines = lines.map((line, i) => 
-      `<tspan x="20" dy="${i === 0 ? 30 : 25}">${this._escapeXml(line)}</tspan>`
-    ).join('');
+    const text = this._currentChunks[chunkIndex];
 
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${1200 + lines.length * 25}">
-      <rect width="100%" height="100%" fill="#1a1a2e"/>
-      <text font-family="Georgia, serif" font-size="18" fill="#e0e0e0" xml:space="preserve">
-        ${svgLines}
-      </text>
-    </svg>`;
+    // Escape special XML characters
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
 
-    // Convert SVG to base64 data URL
+    // Create simple SVG with the text
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200">' +
+      '<rect width="100%" height="100%" fill="#1a1a2e"/>' +
+      '<text x="20" y="40" font-family="Georgia" font-size="18" fill="#e0e0e0">' +
+      escaped +
+      '</text>' +
+      '</svg>';
+
     const base64 = btoa(unescape(encodeURIComponent(svg)));
-    const dataUrl = `data:image/svg+xml;base64,${base64}`;
+    const dataUrl = "data:image/svg+xml;base64," + base64;
 
     return [{ url: dataUrl }];
-  },
-
-  // Helper to escape XML special characters
-  _escapeXml(str) {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
   }
 };
