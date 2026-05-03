@@ -64,7 +64,7 @@ __cinderExport = {
     };
   },
 
-  // ── Chapters (single chapter for testing) ─
+  // ── Chapters (single chapter for testing) ─ Love love--
   async getChapters(mangaId) {
     return [
       {
