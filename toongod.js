@@ -1,9 +1,9 @@
 __cinderExport = {
   id: "toongod",
-  name: "ToonGod Diag",
-  version: "3.0.0",
+  name: "ToonGod InlineDiag",
+  version: "5.0.0",
   icon: "🌐",
-  description: "Diagnostic – shows link counts",
+  description: "Diagnostic – shows info in title",
   contentType: "manga",
 
   capabilities: {
@@ -14,15 +14,14 @@ __cinderExport = {
     resolve: false,
   },
 
-  BASE_URL: "https://www.toongod.org",
-
   async search(query, page = 0) {
-    const url = `${this.BASE_URL}/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
+    // Always search for "stepmother" (known to exist)
+    const url = "https://www.toongod.org/?s=stepmother&post_type=wp-manga";
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) {
       return [{
         id: "error",
-        title: `Fetch failed with status ${res.status}`,
+        title: `Status: ${res.status}`,
         cover: "",
         format: "manga",
       }];
@@ -31,18 +30,21 @@ __cinderExport = {
     const html = res.data;
     const doc = cinder.parseHTML(html);
 
-    // Count all <a> tags
+    // Count container cards
+    const cards = doc.querySelectorAll(".c-tabs-item__content");
+    const cardCount = cards.length;
+
+    // Total links
     const allLinks = doc.querySelectorAll("a");
     const totalLinks = allLinks.length;
 
-    // Count webtoon links
-    const webtoonLinks = doc.querySelectorAll('a[href*="/webtoon/"]');
-    const webtoonCount = webtoonLinks.length;
+    // Page title
+    const titleEl = doc.querySelector("title");
+    const pageTitle = titleEl ? titleEl.text().trim() : "no title";
 
-    // Return one result with the counts
     return [{
       id: "diag",
-      title: `Total <a>: ${totalLinks} | Webtoon <a>: ${webtoonCount}`,
+      title: `Cards: ${cardCount} | Links: ${totalLinks} | Title: ${pageTitle}`,
       cover: "",
       format: "manga",
     }];
