@@ -1,4 +1,64 @@
 __cinderExport = {
+  id: "toongod-diag",
+  name: "ToonGod HTML Diag",
+  version: "1.0.0",
+  icon: "🌐",
+  description: "Shows raw HTML from search page",
+  contentType: "manga",
+
+  capabilities: {
+    search: true,
+    discover: false,
+    manga: true,
+    download: false,
+    resolve: false,
+  },
+
+  async search(query, page = 0) {
+    // Return one dummy result that will trigger the chapters/pages flow
+    return [{
+      id: "diag",
+      title: `Tap to see HTML for "${query}"`,
+      cover: "",
+      format: "manga",
+    }];
+  },
+
+  async getMangaDetails(id) {
+    return {
+      id: id,
+      title: "Raw HTML",
+      cover: "",
+      description: "",
+      author: "",
+      status: "ongoing",
+      genres: [],
+    };
+  },
+
+  async getChapters(mangaId) {
+    return [{
+      id: "html-dump",
+      title: "View HTML",
+      chapterNumber: 0,
+      dateUploaded: "",
+      scanlator: "",
+    }];
+  },
+
+  async getPages(chapterId) {
+    // Fetch the search page
+    const url = "https://www.toongod.org/?s=spider&post_type=wp-manga";
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+
+    // Convert the first 2000 characters to a data URL so it can be displayed
+    const text = `Status: ${res.status}\n\nFirst 2000 chars:\n${res.data.substring(0, 2000)}`;
+    const base64 = btoa(unescape(encodeURIComponent(text)));
+    return [{ url: `data:text/plain;base64,${base64}` }];
+  }
+};__cinderExport = {
   id: "toongod",
   name: "ToonGod",
   version: "1.0.1",
