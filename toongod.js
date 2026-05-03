@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read comics from ToonGod.org",
   contentType: "manga",
 
+  //I love my family
+
   capabilities: {
     search: true,
     discover: true,
