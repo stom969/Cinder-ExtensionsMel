@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "batcave",
   name: "BatCave",
-  version: "1.0.1",
+  version: "1.0.2",
   icon: "🦇",
   description: "Read comics from batcave.biz",
   contentType: "manga",
@@ -49,53 +49,59 @@ __cinderExport = {
     return results;
   },
 
-  // ── Chapters (using embedded JSON) ─────
+  // ── Chapters (regex on raw HTML) ───────
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
     const html = res.data;
-    const doc = cinder.parseHTML(html);
 
-    // 1. Try to find the script containing window.__DATA__
-    const scripts = doc.querySelectorAll("script");
-    let dataObj = null;
-
-    for (let i = 0; i < scripts.length; i++) {
-      const text = scripts[i].textContent || "";
-      const match = text.match(/window\.__DATA__\s*=\s*({.+?\});/);
-      if (match) {
-        try {
-          dataObj = JSON.parse(match[1]);
-          break;
-        } catch (e) {
-          // continue searching
-        }
-      }
+    // Extract the window.__DATA__ object using regex
+    const dataMatch = html.match(/window\.__DATA__\s*=\s*({[\s\S]+?});/);
+    if (!dataMatch) {
+      // If not found, show partial page in chapter title for debugging
+      return [{
+        id: "diag",
+        title: `No __DATA__ found. HTML length: ${html.length}`,
+        chapterNumber: 0,
+        dateUploaded: "",
+        scanlator: "",
+      }];
     }
 
-    // 2. If we found the data, build chapters from it
-    if (dataObj && dataObj.chapters) {
-      const chapters = dataObj.chapters.map((ch) => ({
-        id: `/reader/${dataObj.news_id}/${ch.id}`,
-        title: ch.title,
-        chapterNumber: parseFloat(ch.posi) || 0,
-        dateUploaded: ch.date || "",
-        scanlator: "BatCave",
-      }));
-      // Reverse: oldest first (posi 1 = first issue)
-      return chapters.reverse();
+    let dataObj;
+    try {
+      dataObj = JSON.parse(dataMatch[1]);
+    } catch (e) {
+      return [{
+        id: "diag",
+        title: `JSON parse error: ${e.message.substring(0, 80)}`,
+        chapterNumber: 0,
+        dateUploaded: "",
+        scanlator: "",
+      }];
     }
 
-    // 3. Fallback: if no data, return a diagnostic chapter
-    return [{
-      id: "diag",
-      title: "Could not find chapter data",
-      chapterNumber: 0,
-      dateUploaded: "",
-      scanlator: "",
-    }];
+    if (!dataObj.chapters || !dataObj.chapters.length) {
+      return [{
+        id: "diag",
+        title: "Data found but no chapters array",
+        chapterNumber: 0,
+        dateUploaded: "",
+        scanlator: "",
+      }];
+    }
+
+    const chapters = dataObj.chapters.map((ch) => ({
+      id: `/reader/${dataObj.news_id}/${ch.id}`,
+      title: ch.title,
+      chapterNumber: parseFloat(ch.posi) || 0,
+      dateUploaded: ch.date || "",
+      scanlator: "BatCave",
+    }));
+
+    return chapters.reverse();
   },
 
   // ── Pages ──────────────────────────────
