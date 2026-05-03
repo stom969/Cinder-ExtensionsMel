@@ -21,13 +21,13 @@
     "minCinderVersion": "2.0.0"
   },
   {
-    "id": "batcave",
-    "name": "Batcave PageDiag",
-    "version": "2.0.0",
-    "description": "Read comics from batcave.biz",
-    "contentType": "manga",
-    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=3",
-    "minCinderVersion": "2.0.0"
+	  "id": "batcave",
+	  "name": "BatCave",
+	  "version": "1.0.0",
+	  "description": "Read comics from batcave.biz",
+	  "contentType": "manga",
+	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=final",
+	  "minCinderVersion": "2.0.0"
   },
   {
     "id": "weebcentral",
