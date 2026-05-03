@@ -1,9 +1,9 @@
 __cinderExport = {
   id: "gocomics-working",
-  name: "GoComics Test Conversion",
-  version: "2.0.0",
+  name: "GoComics",
+  version: "2.0.1",
   icon: "📰",
-  description: "Tests base64 conversion of placeholder",
+  description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
 
   capabilities: {
@@ -74,7 +74,7 @@ __cinderExport = {
     const y = now.getFullYear();
     const m = now.getMonth();
     const d = now.getDate();
-    for (let daysAgo = 0; daysAgo < 5; daysAgo++) {  // just 5 for speed
+    for (let daysAgo = 0; daysAgo < 30; daysAgo++) {
       const date = new Date(y, m, d - daysAgo);
       const yy = date.getFullYear();
       const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -92,28 +92,49 @@ __cinderExport = {
   },
 
   async getPages(chapterId) {
-    // Use the placeholder image for testing conversion
-    const imageUrl = "https://placehold.co/800x600/00ff00/white?text=Conversion+Works";
-
-    // Fetch the image
-    const imageRes = await cinder.fetch(imageUrl, {
+    // 1. Fetch the comic page and scrape the image URL
+    const pageUrl = `https://www.gocomics.com/${chapterId}`;
+    const pageRes = await cinder.fetch(pageUrl, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
-    if (imageRes.status !== 200) throw new Error("Failed to download image: " + imageRes.status);
+    if (pageRes.status !== 200) throw new Error("Failed to load comic page");
 
-    // Convert binary data to base64
+    const html = pageRes.data;
+    const doc = cinder.parseHTML(html);
+
+    let imageUrl = null;
+
+    // Look for the comic image using the class we confirmed
+    let img = doc.querySelector('img[class*="Comic-module"][class*="comic__image"]');
+    if (img) imageUrl = img.attr('src');
+
+    // Fallback: any image from featureassets
+    if (!imageUrl) {
+      img = doc.querySelector('img[src*="featureassets.gocomics.com"]');
+      if (img) imageUrl = img.attr('src');
+    }
+
+    if (!imageUrl) throw new Error("Could not find comic image");
+
+    // 2. Fetch the image with the Referer header (just like we did with the placeholder)
+    const imageRes = await cinder.fetch(imageUrl, {
+      headers: {
+        "User-Agent": "CinderApp/1.0",
+        "Referer": pageUrl,    // Required by GoComics CDN
+      }
+    });
+    if (imageRes.status !== 200) throw new Error("Failed to download comic image");
+
+    // 3. Convert binary data to base64 data URL (exactly like the placeholder)
     let base64;
     try {
-      // If data is a string, it might already be base64 or we need to handle binary string
       if (typeof imageRes.data === "string") {
-        // Try to convert binary string to base64
         base64 = btoa(unescape(encodeURIComponent(imageRes.data)));
       } else {
-        // Assume it's an ArrayBuffer or Uint8Array
         base64 = btoa(String.fromCharCode(...new Uint8Array(imageRes.data)));
       }
     } catch (e) {
-      // If conversion fails, fallback: return the original URL
+      // If conversion fails, return the direct URL as fallback
       return [{ url: imageUrl }];
     }
 
