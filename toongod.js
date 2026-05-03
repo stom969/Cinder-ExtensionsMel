@@ -1,7 +1,7 @@
 __cinderExport = {
-  id: "toongod-test",
+  id: "toongod",
   name: "ToonGod Test",
-  version: "1.0.1",
+  version: "1.0.0",
   icon: "🌐",
   description: "Hardcoded test – should show one result",
   contentType: "manga",
