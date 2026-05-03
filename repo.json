@@ -20,7 +20,7 @@
 	  "contentType": "manga",
 	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/gocomics.js?v=1",
 	  "minCinderVersion": "2.0.0"
-}
+},
 		
   {
     "id": "readcomiconline",
