@@ -22,9 +22,9 @@
 		},
 
 		{
-		    "id": "toongod",
-		    "name": "ToonGod",
-		    "version": "1.0.1",
+		    "id": "toongod-diag",
+		    "name": "ToonGod HTML Diag",
+		    "version": "1.0.0",
 		    "description": "Read comics from ToonGod.org",
 		    "contentType": "manga",
 		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js",
