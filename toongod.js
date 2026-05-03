@@ -1,13 +1,11 @@
 __cinderExport = {
   id: "toongod",
-  name: "ToonGod FetchCheck",
-  version: "4.0.0",
+  name: "ToonGod BrowserFetch",
+  version: "5.0.0",
   icon: "🌐",
-  description: "Checks if fetch works",
+  description: "Tests fetchBrowser",
   contentType: "manga",
 
-  //for love can make anything possible
-  
   capabilities: {
     search: true,
     discover: false,
@@ -18,19 +16,24 @@ __cinderExport = {
 
   async search(query, page = 0) {
     const url = `https://www.toongod.org/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
-    const res = await cinder.fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.toongod.org/"
-      }
-    });
-
+    let res;
+    try {
+      // Try the browser-powered fetch
+      res = await cinder.fetchBrowser(url);
+    } catch (e) {
+      return [{
+        id: "error",
+        title: `fetchBrowser error: ${e.message}`,
+        cover: "",
+        format: "manga",
+      }];
+    }
+    
     const status = res.status;
     const length = res.data ? res.data.length : 0;
-
     return [{
       id: "diag",
-      title: `Status: ${status} | Length: ${length}`,
+      title: `BrowserFetch Status: ${status} | Length: ${length}`,
       cover: "",
       format: "manga",
     }];
