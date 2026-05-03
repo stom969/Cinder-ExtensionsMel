@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Diagnostic test",
   contentType: "books",
 
+  //love love
+
   capabilities: {
     search: true,
     discover: true,
