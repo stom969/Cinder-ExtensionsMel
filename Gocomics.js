@@ -14,7 +14,7 @@ __cinderExport = {
     resolve: false,
   },
 
-  LIST_URL: "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/comics.json",
+  LIST_URL: "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/comics.json",
 
   _listCache: null,
 
