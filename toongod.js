@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Checks if fetch works",
   contentType: "manga",
 
+  //for love can make anything possible
+  
   capabilities: {
     search: true,
     discover: false,
