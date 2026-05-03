@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.0.1",
+  version: "1.0.2",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
-
-  //love love
 
   capabilities: {
     search: true,
