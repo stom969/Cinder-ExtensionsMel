@@ -1,16 +1,14 @@
 __cinderExport = {
   id: "batcave",
-  name: "BatCave Diag",
-  version: "1.0.1",
+  name: "BatCave PageDiag",
+  version: "2.0.0",
   icon: "🦇",
-  description: "Diagnostic – shows chapter info",
+  description: "Checks comic page HTML",
   contentType: "manga",
-
-  //love is good
 
   capabilities: {
     search: true,
-    discover: true,
+    discover: false,
     manga: true,
     download: false,
     resolve: false,
@@ -19,82 +17,53 @@ __cinderExport = {
   BASE_URL: "https://batcave.biz",
 
   async search(query, page = 0) {
-    const url = `${this.BASE_URL}/search/${encodeURIComponent(query)}`;
+    // Only run for a known comic – hardcoded for testing
+    const comicPath = "/33758-batman-2025.html"; // known Batman comic
+    const url = `${this.BASE_URL}${comicPath}`;
     const res = await cinder.fetchBrowser(url);
-    if (res.status !== 200) return [];
-    const doc = cinder.parseHTML(res.data);
-    const results = [];
-    doc.querySelectorAll(".readed.d-flex.short").forEach((card) => {
-      const titleLink = card.querySelector("h2.readed__title a");
-      const img = card.querySelector("a.readed__img img");
-      if (!titleLink) return;
-      const href = titleLink.attr("href");
-      const title = titleLink.text().trim();
-      const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
-      if (title && href) {
-        results.push({
-          id: href,
-          title: title,
-          cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
-          format: "manga",
-        });
-      }
-    });
-    return results;
-  },
-
-  async getChapters(mangaId) {
-    const url = `${this.BASE_URL}${mangaId}`;
-    const res = await cinder.fetchBrowser(url);
-    if (res.status !== 200) return [];
+    if (res.status !== 200) {
+      return [{
+        id: "error",
+        title: `Comic page fetch failed: ${res.status}`,
+        cover: "",
+        format: "manga",
+      }];
+    }
 
     const html = res.data;
     const doc = cinder.parseHTML(html);
 
-    // Count how many chapter items we find
-    const chapterItems = doc.querySelectorAll(".cl__item");
-    const fullstoryChapters = doc.querySelectorAll(".comix__fullstory-chapters .cl__item");
-    const anyLink = doc.querySelectorAll("a[href*='/reader/']");
+    // Count chapter items
+    const clItems = doc.querySelectorAll(".cl__item");
+    const count = clItems.length;
 
-    // Return diagnostic info as fake chapters
+    // Find the chapter container HTML snippet
+    const chapterContainer = doc.querySelector(".comix__fullstory-chapters");
+    let snippet = "";
+    if (chapterContainer) {
+      snippet = chapterContainer.innerHTML.substring(0, 200);
+    } else {
+      snippet = doc.querySelector("body")?.innerHTML?.substring(0, 200) || "no body";
+    }
+
+    // Return diagnostic results
     return [
       {
         id: "diag1",
-        title: `.cl__item count: ${chapterItems.length}`,
-        chapterNumber: 0,
-        dateUploaded: "",
-        scanlator: "",
+        title: `Chapter items (.cl__item): ${count}`,
+        cover: "",
+        format: "manga",
       },
       {
         id: "diag2",
-        title: `.comix__fullstory-chapters .cl__item: ${fullstoryChapters.length}`,
-        chapterNumber: 0,
-        dateUploaded: "",
-        scanlator: "",
-      },
-      {
-        id: "diag3",
-        title: `Reader links found: ${anyLink.length}`,
-        chapterNumber: 0,
-        dateUploaded: "",
-        scanlator: "",
-      },
+        title: `HTML snippet: ${snippet}`,
+        cover: "",
+        format: "manga",
+      }
     ];
   },
 
-  async getPages(chapterId) {
-    return [{ url: "https://placehold.co/800x600/00ff00/white?text=Diag" }];
-  },
-
-  async getMangaDetails(id) {
-    return { id, title: "Diag", cover: "", description: "", author: "", status: "ongoing", genres: [] };
-  },
-
-  async getDiscoverSections() {
-    return [{ id: "latest", title: "Latest", icon: "🆕" }];
-  },
-
-  async getDiscoverItems(sectionId, page = 0) {
-    return await this.search("", page);
-  }
+  async getMangaDetails(id) { return { id, title:"Diag", cover:"", description:"", author:"", status:"ongoing", genres:[] }; },
+  async getChapters(mangaId) { return [{ id:"diag", title:"Diag", chapterNumber:0, dateUploaded:"", scanlator:"" }]; },
+  async getPages(chapterId) { return [{ url: "https://placehold.co/800x600/00ff00/white?text=Diag" }]; }
 };
