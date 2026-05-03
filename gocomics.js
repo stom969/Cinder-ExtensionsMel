@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "gocomics",
   name: "GoComics",
-  version: "1.0.1",
+  version: "1.0.3",
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
@@ -42,7 +42,7 @@ __cinderExport = {
       id: c.slug,
       title: c.name,
       author: "",
-      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${c.slug}`,
+      cover: `https://featureassets.gocomics.com/assets/recommendation_avatars/${c.slug}.png`,
       format: "manga",
     }));
   },
@@ -63,7 +63,7 @@ __cinderExport = {
     return {
       id: id,
       title: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
-      cover: `https://avatar.amuniversal.com/feature_avatars/recommendation?feature=${id}`,
+      cover: `https://featureassets.gocomics.com/assets/recommendation_avatars/${id}.png`,
       description: "",
       author: "",
       status: "ongoing",
