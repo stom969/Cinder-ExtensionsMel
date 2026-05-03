@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "batcave",
   name: "BatCave",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "🦇",
   description: "Read comics from batcave.biz",
   contentType: "manga",
@@ -51,7 +51,7 @@ __cinderExport = {
     let seriesNode = null;
 
     for (let i = 0; i < scripts.length; i++) {
-      const text = scripts[i].textContent || "";
+      const text = scripts[i].text() || "";
       try {
         const json = JSON.parse(text);
         const graph = json["@graph"];
