@@ -1,6 +1,6 @@
 __cinderExport = {
-  id: "toongod-diag",
-  name: "ToonGod HTML Diag",
+  id: "toongod-test",
+  name: "ToonGod Test",
   version: "1.0.1",
   icon: "🌐",
   description: "Hardcoded test – should show one result",
