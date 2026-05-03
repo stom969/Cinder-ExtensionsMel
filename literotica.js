@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read stories from Literotica.com",
   contentType: "books",
 
+  //love is blind
+
   capabilities: {
     search: true,
     discover: true,
