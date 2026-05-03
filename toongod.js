@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Diagnostic – shows info in title",
   contentType: "manga",
 
+  //Love for beans
+
   capabilities: {
     search: true,
     discover: false,
