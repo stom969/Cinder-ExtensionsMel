@@ -39,39 +39,36 @@ __cinderExport = {
     return results;
   },
 
-  // ── Chapters (JSON‑LD extraction) ──────
+  // ── Chapters ───────────────────────────
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
-    const html = res.data;
+    const doc = cinder.parseHTML(res.data);
+    // Find the JSON-LD script that contains "ComicSeries"
+    const scripts = doc.querySelectorAll("script[type='application/ld+json']");
+    let seriesNode = null;
 
-    // Find all JSON‑LD script blocks
-    const scriptRegex = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
-    let match;
-    let data = null;
-
-    while ((match = scriptRegex.exec(html)) !== null) {
+    for (let i = 0; i < scripts.length; i++) {
+      const text = scripts[i].textContent || "";
       try {
-        const parsed = JSON.parse(match[1]);
-        // Check if this block contains a ComicSeries node
-        const graph = parsed["@graph"];
-        if (Array.isArray(graph) && graph.some(node => node["@type"] === "ComicSeries")) {
-          data = parsed;
-          break;
+        const json = JSON.parse(text);
+        const graph = json["@graph"];
+        if (Array.isArray(graph)) {
+          const found = graph.find(node => node["@type"] === "ComicSeries");
+          if (found && found.hasPart) {
+            seriesNode = found;
+            break;
+          }
         }
-      } catch (e) { /* skip malformed blocks */ }
+      } catch (e) { /* continue */ }
     }
 
-    if (!data) return [];
-
-    const seriesNode = data["@graph"].find(node => node["@type"] === "ComicSeries");
-    if (!seriesNode || !seriesNode.hasPart || !seriesNode.hasPart.itemListElement) return [];
+    if (!seriesNode) return [];
 
     const chapters = seriesNode.hasPart.itemListElement.map(el => {
       const issue = el.item;
-      // Strip the base URL to get the relative path
       const id = issue.url.replace(this.BASE_URL, "");
       return {
         id: id,
@@ -80,7 +77,7 @@ __cinderExport = {
         dateUploaded: "",
         scanlator: "BatCave",
       };
-    }).reverse(); // Oldest first
+    }).reverse();
 
     return chapters;
   },
@@ -111,7 +108,7 @@ __cinderExport = {
     const img = doc.querySelector(".page__poster img");
     const cover = img ? (img.attr("src") || img.attr("data-src")) : "";
     const desc = doc.querySelector(".page__text.full-text")?.text()?.trim() || "";
-    
+
     return {
       id, title,
       cover: cover.startsWith("/") ? this.BASE_URL + cover : cover,
