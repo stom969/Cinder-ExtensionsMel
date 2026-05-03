@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
 
+  //love love
+
   capabilities: {
     search: true,
     discover: true,
