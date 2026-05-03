@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.1.0",
+  version: "1.0.0",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
-
-  //love love
 
   capabilities: {
     search: true,
@@ -18,8 +16,6 @@ __cinderExport = {
 
   BASE_URL: "https://www.literotica.com",
   SEARCH_URL: "https://search.literotica.com",
-
-  _currentText: "",
 
   async search(query, page = 0) {
     const url = `${this.SEARCH_URL}/?query=${encodeURIComponent(query)}`;
@@ -79,7 +75,6 @@ __cinderExport = {
   },
 
   async getPages(chapterId) {
-    // Return a simple placeholder for now
-    return [{ url: "https://placehold.co/800x1200/1a1a2e/e0e0e0?text=Story+Text+Here" }];
+    return [{ url: "https://placehold.co/800x1200/1a1a2e/e0e0e0?text=Test" }];
   }
 };
