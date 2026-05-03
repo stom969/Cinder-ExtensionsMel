@@ -5,8 +5,6 @@ __cinderExport = {
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
-
-  //love love
   
   capabilities: {
     search: true,
