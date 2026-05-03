@@ -21,12 +21,12 @@
     "minCinderVersion": "2.0.0"
   },
   {
-    "id": "batcave-test",
-    "name": "Batcave ConnTest",
-    "version": "2.0.0",
+    "id": "batcave",
+    "name": "Batcave",
+    "version": "1.0.0",
     "description": "Tests batcave.biz connectivity",
     "contentType": "manga",
-    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=3",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=1",
     "minCinderVersion": "2.0.0"
   },
   {
