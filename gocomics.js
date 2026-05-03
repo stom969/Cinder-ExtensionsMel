@@ -95,14 +95,12 @@ __cinderExport = {
     return chapters.reverse();
   },
 
-  // ── Pages (fetch image + convert to data URL) ─
+  // ── Pages (fetchBrowser to get image) ─
   async getPages(chapterId) {
     const pageUrl = `https://www.gocomics.com/${chapterId}`;
 
-    // 1. Fetch the comic page to scrape the image URL
-    const pageRes = await cinder.fetch(pageUrl, {
-      headers: { "User-Agent": "CinderApp/1.0" }
-    });
+    // 1. Fetch the comic page using fetchBrowser
+    const pageRes = await cinder.fetchBrowser(pageUrl);
     if (pageRes.status !== 200) throw new Error("Failed to load comic page");
 
     const doc = cinder.parseHTML(pageRes.data);
@@ -125,16 +123,16 @@ __cinderExport = {
     const imageUrl = img.attr('src');
     if (!imageUrl) throw new Error("Image URL not found");
 
-    // 2. Fetch the image with Referer header (required by GoComics CDN)
-    const imgRes = await cinder.fetch(imageUrl, {
+    // 2. Fetch the image using fetchBrowser with Referer
+    const imgRes = await cinder.fetchBrowser(imageUrl, {
       headers: {
-        "User-Agent": "CinderApp/1.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Referer": pageUrl,
       }
     });
     if (imgRes.status !== 200) throw new Error("Failed to download image");
 
-    // 3. Convert binary data to base64 data URL
+    // 3. Convert to base64 data URL
     let base64;
     if (typeof imgRes.data === "string") {
       base64 = btoa(unescape(encodeURIComponent(imgRes.data)));
