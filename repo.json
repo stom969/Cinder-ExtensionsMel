@@ -27,7 +27,7 @@
 	  "version": "1.0.0",
 	  "description": "Read comics from batcave.biz",
 	  "contentType": "manga",
-	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=ldjson",
+	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave.js?v=ldjson2",
 	  "minCinderVersion": "2.0.0"
   },
   {
