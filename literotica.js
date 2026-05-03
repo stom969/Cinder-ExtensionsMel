@@ -1,9 +1,9 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.1.0",
+  version: "2.0.0",
   icon: "📖",
-  description: "Read stories from Literotica.com as EPUB",
+  description: "Read stories from Literotica.com (EPUB upload)",
   contentType: "books",
 
   capabilities: {
@@ -52,12 +52,13 @@ __cinderExport = {
   },
 
   async resolve(item) {
-    const res = await cinder.fetch(item.url, {
+    // 1. Fetch the story page
+    const pageRes = await cinder.fetch(item.url, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
-    if (res.status !== 200) throw new Error("Failed to load story");
+    if (pageRes.status !== 200) throw new Error("Failed to load story page");
 
-    const doc = cinder.parseHTML(res.data);
+    const doc = cinder.parseHTML(pageRes.data);
     const title = doc.querySelector("h1")?.text()?.trim() || "Untitled";
     const author = doc.querySelector('a[href*="/authors/"]')?.text()?.trim() || "Unknown";
 
@@ -74,9 +75,54 @@ __cinderExport = {
 
     if (!contentHtml) throw new Error("No story content found");
 
-    const epub = this._buildEpub(title, author, contentHtml);
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(epub)));
+    // 2. Build the EPUB file (raw bytes)
+    const epubBytes = this._buildEpub(title, author, contentHtml);
+
+    // 3. Upload to file.io to get a direct download URL
+    const uploadUrl = "https://file.io";
+    const boundary = "----CinderUpload" + Math.random().toString(36).substring(2);
+    const body = this._multipartBody(boundary, "file", title.replace(/[^a-z0-9]/gi, "_") + ".epub", epubBytes, "application/epub+zip");
+
+    const uploadRes = await cinder.fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "multipart/form-data; boundary=" + boundary,
+      },
+      body: body,
+    });
+
+    if (uploadRes.status === 200) {
+      const json = JSON.parse(uploadRes.data);
+      if (json.link) {
+        return { url: json.link };
+      }
+    }
+
+    // 4. Fallback: if upload fails, try a data URL (may not work, but attempt)
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(epubBytes)));
     return { url: "data:application/epub+zip;base64," + base64 };
+  },
+
+  _multipartBody(boundary, fieldName, fileName, fileBytes, mimeType) {
+    const encoder = new TextEncoder();
+    const parts = [];
+
+    parts.push(encoder.encode("--" + boundary + "\r\n"));
+    parts.push(encoder.encode("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + fileName + "\"\r\n"));
+    parts.push(encoder.encode("Content-Type: " + mimeType + "\r\n\r\n"));
+    parts.push(fileBytes);
+    parts.push(encoder.encode("\r\n--" + boundary + "--\r\n"));
+
+    // Concatenate all parts into a single Uint8Array
+    let totalLength = 0;
+    for (const p of parts) totalLength += p.length;
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const p of parts) {
+      result.set(p, offset);
+      offset += p.length;
+    }
+    return result;
   },
 
   _buildEpub(title, author, bodyHtml) {
