@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "gocomics",
   name: "GoComics",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "📰",
   description: "Read daily comic strips from GoComics.com",
   contentType: "manga",
@@ -98,10 +98,10 @@ __cinderExport = {
   },
 
   // ── Pages (fetchBrowser to get image) ─
-  async getPages(chapterId) {
+    async getPages(chapterId) {
     const pageUrl = `https://www.gocomics.com/${chapterId}`;
 
-    // 1. Fetch the comic page using fetchBrowser
+    // Fetch the comic page using fetchBrowser
     const pageRes = await cinder.fetchBrowser(pageUrl);
     if (pageRes.status !== 200) throw new Error("Failed to load comic page");
 
@@ -125,14 +125,9 @@ __cinderExport = {
     const imageUrl = img.attr('src');
     if (!imageUrl) throw new Error("Image URL not found");
 
-    // 2. Fetch the image using fetchBrowser with Referer
-    const imgRes = await cinder.fetchBrowser(imageUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": pageUrl,
-      }
-    });
-    if (imgRes.status !== 200) throw new Error("Failed to download image");
+    // Return the URL directly — no conversion
+    return [{ url: imageUrl }];
+  }
 
     // 3. Convert to base64 data URL
     let base64;
