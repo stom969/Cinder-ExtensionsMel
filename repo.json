@@ -1,45 +1,42 @@
 {
 	"name": "Cinder Test Extensions",
-	"author": "stom969",
-	"extensions":
-		{
-			"id": "mangadex",
-			"name": "MangaDex",
-			"version": "1.0.7",
-			"description": "Search manga from MangaDex.org — free, community-run manga platform",
-			"contentType": "manga",
-			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
-			"minCinderVersion": "2.0.0"
-		},
-		{
-			"id": "readcomiconline",
-			"name": "ReadComicOnline",
-			"version": "1.0.5",
-			"description": "Read Marvel, DC, Image and more comics — the largest western comics library",
-			"contentType": "manga",
-			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/readcomiconline.js",
-			"minCinderVersion": "2.0.0"
-		},
-
-		{
-		    "id": "batcave-test",
-			  "name": "Batcave Test",
-			  "version": "1.0.0",
-			  "description": "Tests batcave.biz connectivity",
-			  "contentType": "manga",
-			  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=1",
-			  "minCinderVersion": "2.0.0"
-		  },
-
-		
-		{
-			"id": "weebcentral",
-			"name": "WeebCentral",
-			"version": "1.0.6",
-			"description": "Read manga, manhwa, and manhua from WeebCentral.com",
-			"contentType": "manga",
-			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/weebcentral.js",
-			"minCinderVersion": "2.0.0"
-		}
-	]
-}
+	"author": "CinderDev",
+	"extensions":[
+  {
+    "id": "mangadex",
+    "name": "MangaDex",
+    "version": "1.0.7",
+    "description": "Search manga from MangaDex.org — free, community-run manga platform",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
+    "minCinderVersion": "2.0.0"
+  },
+  {
+    "id": "readcomiconline",
+    "name": "ReadComicOnline",
+    "version": "1.0.5",
+    "description": "Read Marvel, DC, Image and more comics — the largest western comics library",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/readcomiconline.js",
+    "minCinderVersion": "2.0.0"
+  },
+  {
+    "id": "batcave-test",
+    "name": "Batcave Test",
+    "version": "1.0.0",
+    "description": "Tests batcave.biz connectivity",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave_test.js?v=1",
+    "minCinderVersion": "2.0.0"
+  },
+  {
+    "id": "weebcentral",
+    "name": "WeebCentral",
+    "version": "1.0.6",
+    "description": "Read manga, manhwa, and manhua from WeebCentral.com",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/weebcentral.js",
+    "minCinderVersion": "2.0.0"
+  }
+]
+	 }
