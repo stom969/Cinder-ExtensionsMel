@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "batcave",
   name: "BatCave",
-  version: "1.0.1",
+  version: "1.0.2",
   icon: "🦇",
   description: "Read comics from batcave.biz",
   contentType: "manga",
@@ -39,37 +39,34 @@ __cinderExport = {
     return results;
   },
 
-  // ── Chapters ───────────────────────────
+  // ── Chapters (extract JSON-LD with regex) ─
   async getChapters(mangaId) {
     const url = `${this.BASE_URL}${mangaId}`;
     const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
-    const doc = cinder.parseHTML(res.data);
-    // Find the JSON-LD script that contains "ComicSeries"
-    const scripts = doc.querySelectorAll("script[type='application/ld+json']");
-    let seriesNode = null;
+    const html = res.data;
 
-    for (let i = 0; i < scripts.length; i++) {
-      const text = scripts[i].text() || "";
-      try {
-        const json = JSON.parse(text);
-        const graph = json["@graph"];
-        if (Array.isArray(graph)) {
-          const found = graph.find(node => node["@type"] === "ComicSeries");
-          if (found && found.hasPart) {
-            seriesNode = found;
-            break;
-          }
-        }
-      } catch (e) { /* continue */ }
+    // Find the script block containing "ComicSeries"
+    const seriesRegex = /<script type="application\/ld\+json">([\s\S]*?@type"\s*:\s*"ComicSeries"[\s\S]*?)<\/script>/;
+    const match = html.match(seriesRegex);
+    if (!match) return [];
+
+    let data;
+    try {
+      data = JSON.parse(match[1]);
+    } catch (e) {
+      return [];
     }
 
-    if (!seriesNode) return [];
+    // Locate the ComicSeries node
+    const graph = data["@graph"] || [];
+    const seriesNode = graph.find(node => node["@type"] === "ComicSeries");
+    if (!seriesNode || !seriesNode.hasPart || !seriesNode.hasPart.itemListElement) return [];
 
     const chapters = seriesNode.hasPart.itemListElement.map(el => {
       const issue = el.item;
-      const id = issue.url.replace(this.BASE_URL, "");
+      const id = issue.url.replace(this.BASE_URL, ""); // /reader/33758/246752
       return {
         id: id,
         title: issue.name,
@@ -77,7 +74,7 @@ __cinderExport = {
         dateUploaded: "",
         scanlator: "BatCave",
       };
-    }).reverse();
+    }).reverse(); // oldest first
 
     return chapters;
   },
