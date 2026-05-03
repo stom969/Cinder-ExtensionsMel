@@ -2,6 +2,7 @@
 	"name": "Cinder Test Extensions",
 	"author": "Stom969",
 	"extensions": [
+		
 		{
 			"id": "mangadex",
 			"name": "MangaDex",
