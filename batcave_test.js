@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Diagnostic – shows chapter info",
   contentType: "manga",
 
+  //love is good
+
   capabilities: {
     search: true,
     discover: true,
