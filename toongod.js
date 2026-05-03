@@ -1,65 +1,149 @@
 __cinderExport = {
   id: "toongod",
-  name: "ToonGod HTML View",
-  version: "2.0.0",
+  name: "ToonGod",
+  version: "3.0.0",
   icon: "🌐",
-  description: "Shows raw search HTML",
+  description: "Read comics from ToongGod.org",
   contentType: "manga",
 
   capabilities: {
     search: true,
-    discover: false,
+    discover: true,
     manga: true,
     download: false,
     resolve: false,
   },
 
+  BASE_URL: "https://www.toongod.org",
+
   async search(query, page = 0) {
-    // Fetch the search page
-    const url = `https://www.toongod.org/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
+    const url = `${this.BASE_URL}/?s=${encodeURIComponent(query)}&post_type=wp-manga`;
     const res = await cinder.fetch(url, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
-    const html = res.data || "";
+    if (res.status !== 200) return [];
 
-    // Save the HTML so we can display it in the pages
-    this._savedHtml = html;
+    const html = res.data;
+    const doc = cinder.parseHTML(html);
 
-    // Return one dummy manga item
-    return [{
-      id: "diag",
-      title: `Tap to view HTML for "${query}"`,
-      cover: "",
-      format: "manga",
-    }];
-  },
+    // Fallback method: find all <a> tags that link to a webtoon
+    const results = [];
+    const seen = {};
+    const links = doc.querySelectorAll('a[href*="/webtoon/"]');
+    
+    links.forEach((link) => {
+      const href = link.attr("href");
+      // Skip non-comic links (like author, genre, etc.)
+      if (!href || href.includes("/webtoon-author/") || href.includes("/webtoon-artist/") || href.includes("/webtoon-genre/") || href.includes("/webtoon-release/")) return;
+      if (seen[href]) return;
+      seen[href] = true;
 
-  async getMangaDetails(id) {
-    return {
-      id: id,
-      title: "HTML View",
-      cover: "",
-      description: "",
-      author: "",
-      status: "ongoing",
-      genres: [],
-    };
+      // Use the link text as title (might be clean, or might be just "Chapter X")
+      let title = link.text().trim();
+      if (!title || title.length < 3) {
+        // Fallback: extract slug from URL
+        const slug = href.split("/webtoon/")[1]?.split("/")[0] || "";
+        title = slug.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+      }
+
+      // Try to find a cover image nearby
+      let cover = "";
+      const parent = link.parentNode?.parentNode; // go up one or two levels
+      if (parent) {
+        const img = parent.querySelector("img");
+        if (img) cover = img.attr("data-src") || img.attr("src") || "";
+      }
+
+      const id = href.replace(this.BASE_URL, "").replace(/\/$/, "");
+      results.push({
+        id: id,
+        title: title,
+        author: "",
+        cover: cover,
+        url: href,
+        format: "manga",
+      });
+    });
+
+    return results;
   },
 
   async getChapters(mangaId) {
-    return [{
-      id: "show-html",
-      title: "Show Search HTML",
-      chapterNumber: 0,
-      dateUploaded: "",
-      scanlator: "",
-    }];
+    const url = `${this.BASE_URL}${mangaId}`;
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    if (res.status !== 200) return [];
+
+    const html = res.data;
+    const doc = cinder.parseHTML(html);
+    const chapters = [];
+
+    // Look for chapter links in common containers
+    doc.querySelectorAll(".version-chap li a, .wp-manga-chapter a, .listing-chapters_wrap a").forEach((link) => {
+      const href = link.attr("href");
+      const title = link.text().trim();
+      const id = href.replace(this.BASE_URL, "");
+      const chNum = parseFloat((title.match(/Chapter\s+([\d.]+)/i) || [])[1]) || 0;
+      chapters.push({
+        id: id,
+        title: title || `Chapter ${chapters.length + 1}`,
+        chapterNumber: chNum,
+        dateUploaded: "",
+        scanlator: "ToonGod",
+      });
+    });
+
+    return chapters.reverse();
   },
 
   async getPages(chapterId) {
-    // Convert the saved HTML to base64 for display
-    const text = this._savedHtml.substring(0, 3000); // first 3000 chars
-    const base64 = btoa(unescape(encodeURIComponent(text)));
-    return [{ url: `data:text/plain;base64,${base64}` }];
+    const url = `${this.BASE_URL}${chapterId}`;
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    if (res.status !== 200) return [];
+
+    const html = res.data;
+    const doc = cinder.parseHTML(html);
+    const pages = [];
+
+    doc.querySelectorAll(".reading-content img, .page-break img, .entry-content img").forEach((img) => {
+      let src = img.attr("data-src") || img.attr("data-lazy-src") || img.attr("src");
+      if (src && src.startsWith("http")) {
+        pages.push({ url: src.trim() });
+      }
+    });
+
+    return pages;
+  },
+
+  async getMangaDetails(id) {
+    const url = `${this.BASE_URL}${id}`;
+    const res = await cinder.fetch(url, {
+      headers: { "User-Agent": "CinderApp/1.0" }
+    });
+    if (res.status !== 200) throw new Error("Failed");
+
+    const html = res.data;
+    const doc = cinder.parseHTML(html);
+    const title = (doc.querySelector(".post-title h1") || doc.querySelector("h1"))?.text()?.trim() || id;
+    const cover = doc.querySelector(".summary_image img")?.attr("data-src") || doc.querySelector(".summary_image img")?.attr("src") || "";
+    const desc = doc.querySelector(".description-summary .summary__content")?.text()?.trim() || "";
+    const author = doc.querySelector(".author-content a")?.text()?.trim() || "";
+
+    return { id, title, cover, description: desc, author, status: "ongoing", genres: [] };
+  },
+
+  async getDiscoverSections() {
+    return [
+      { id: "latest", title: "Latest Updates", icon: "🆕" },
+      { id: "popular", title: "Popular", icon: "🔥" },
+    ];
+  },
+
+  async getDiscoverItems(sectionId, page = 0) {
+    // Just reuse search with empty query for now
+    return await this.search("", page);
   }
 };
