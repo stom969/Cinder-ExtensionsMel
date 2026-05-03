@@ -2,17 +2,15 @@
 	"name": "Cinder Test Extensions",
 	"author": "stom969",
 	"extensions": [
-		[
-
 		{
-    "id": "toongod",
-    "name": "ToonGod",
-    "version": "1.0.0",
-    "description": "Read comics from ToonGod.org",
-    "contentType": "manga",
-    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js",
-    "minCinderVersion": "2.0.0"
-  },
+			"id": "mangadex",
+			"name": "MangaDex",
+			"version": "1.0.7",
+			"description": "Search manga from MangaDex.org — free, community-run manga platform",
+			"contentType": "manga",
+			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
+			"minCinderVersion": "2.0.0"
+		},
 		{
 			"id": "readcomiconline",
 			"name": "ReadComicOnline",
@@ -22,6 +20,18 @@
 			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/readcomiconline.js",
 			"minCinderVersion": "2.0.0"
 		},
+
+		{
+		    "id": "toongod",
+		    "name": "ToonGod",
+		    "version": "1.0.0",
+		    "description": "Read comics from ToonGod.org",
+		    "contentType": "manga",
+		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js",
+		    "minCinderVersion": "2.0.0"
+		  },
+
+		
 		{
 			"id": "weebcentral",
 			"name": "WeebCentral",
