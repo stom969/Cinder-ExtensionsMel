@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Tests batcave.biz connectivity",
   contentType: "manga",
 
+  //love myself and fam
+
   capabilities: {
     search: true,
     discover: false,
