@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "toongod",
-  name: "ToonGod InlineDiag",
-  version: "5.0.0",
+  name: "ToonGod MobUA",
+  version: "6.0.0",
   icon: "🌐",
-  description: "Diagnostic – shows info in title",
+  description: "Tests mobile User-Agent",
   contentType: "manga",
-
-  //Love for beans
 
   capabilities: {
     search: true,
@@ -17,36 +15,23 @@ __cinderExport = {
   },
 
   async search(query, page = 0) {
-    // Always search for "stepmother" (known to exist)
     const url = "https://www.toongod.org/?s=stepmother&post_type=wp-manga";
-    const res = await cinder.fetchBrowser(url);
+    const res = await cinder.fetchBrowser(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+      }
+    });
     if (res.status !== 200) {
-      return [{
-        id: "error",
-        title: `Status: ${res.status}`,
-        cover: "",
-        format: "manga",
-      }];
+      return [{ id: "err", title: `Status: ${res.status}`, cover: "", format: "manga" }];
     }
-
-    const html = res.data;
-    const doc = cinder.parseHTML(html);
-
-    // Count container cards
+    const doc = cinder.parseHTML(res.data);
     const cards = doc.querySelectorAll(".c-tabs-item__content");
-    const cardCount = cards.length;
-
-    // Total links
-    const allLinks = doc.querySelectorAll("a");
-    const totalLinks = allLinks.length;
-
-    // Page title
+    const links = doc.querySelectorAll("a");
     const titleEl = doc.querySelector("title");
     const pageTitle = titleEl ? titleEl.text().trim() : "no title";
-
     return [{
       id: "diag",
-      title: `Cards: ${cardCount} | Links: ${totalLinks} | Title: ${pageTitle}`,
+      title: `Cards: ${cards.length} | Links: ${links.length} | Title: ${pageTitle}`,
       cover: "",
       format: "manga",
     }];
