@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read stories from Literotica.com",
   contentType: "manga",
 
+  //love love
+
   capabilities: {
     search: true,
     discover: true,
