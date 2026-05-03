@@ -22,12 +22,12 @@
     "minCinderVersion": "2.0.0"
   },
   {
-		  "id": "batcave",
+	  "id": "batcave",
 	  "name": "BatCave",
-	  "version": "1.0.0",
+	  "version": "1.0.1",
 	  "description": "Read comics from batcave.biz",
 	  "contentType": "manga",
-	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave.js?v=ldjson2",
+	  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/batcave.js?v=final2",
 	  "minCinderVersion": "2.0.0"
   },
   {
