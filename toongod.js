@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Read comics from ToonGod.org",
   contentType: "manga",
 
+  //Memories fade over time, treasure them while you still remember
+
   capabilities: {
     search: true,
     discover: true,
