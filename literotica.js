@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "1.0.2",
+  version: "1.0.3",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
-
-  //love me like you do
 
   capabilities: {
     search: true,
@@ -67,18 +65,32 @@ __cinderExport = {
   },
 
   async getChapters(mangaId) {
-    // Fetch the story and store it
     const url = `${this.BASE_URL}${mangaId}`;
-    const res = await cinder.fetch(url, {
-      headers: { "User-Agent": "CinderApp/1.0" }
-    });
+    const res = await cinder.fetchBrowser(url);
     if (res.status !== 200) return [];
 
     const doc = cinder.parseHTML(res.data);
-    const contentEl = doc.querySelector("._introduction-wrap_86nfw_1");
-    if (!contentEl) return [];
-
-    this._storyText = contentEl.text().trim();
+    
+    // Try the class-based selector first
+    let contentEl = doc.querySelector("._introduction-wrap_86nfw_1");
+    
+    // If that fails, try broader selectors
+    if (!contentEl) {
+      contentEl = doc.querySelector("[class*='introduction']");
+    }
+    if (!contentEl) {
+      contentEl = doc.querySelector(".bn_B");
+    }
+    if (!contentEl) {
+      // Last resort: get all paragraph text from the page
+      const paragraphs = doc.querySelectorAll("p");
+      this._storyText = "";
+      paragraphs.forEach(function(p) {
+        this._storyText += p.text().trim() + "\n\n";
+      });
+    } else {
+      this._storyText = contentEl.text().trim();
+    }
 
     return [
       {
@@ -92,18 +104,17 @@ __cinderExport = {
   },
 
   async getPages(chapterId) {
+    // If we couldn't get text, fall back to test image
     if (!this._storyText) {
-      return [{ url: "https://placehold.co/800x600/ff0000/white?text=No+text" }];
+      return [{ url: "https://placehold.co/800x600/ff0000/white?text=No+content+found" }];
     }
 
-    // Escape XML special characters in the story text
     var escaped = this._storyText;
     escaped = escaped.replace(/&/g, "&amp;");
     escaped = escaped.replace(/</g, "&lt;");
     escaped = escaped.replace(/>/g, "&gt;");
     escaped = escaped.replace(/"/g, "&quot;");
 
-    // Create an SVG with the text
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="' + (1200 + this._storyText.length) + '">';
     svg += '<rect width="100%" height="100%" fill="#1a1a2e"/>';
     svg += '<foreignObject width="100%" height="100%">';
