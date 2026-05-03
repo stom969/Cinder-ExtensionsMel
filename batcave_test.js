@@ -5,6 +5,9 @@ __cinderExport = {
   icon: "🦇",
   description: "Minimal test",
   contentType: "manga",
+
+  //I love love
+  
   capabilities: {
     search: true,
     discover: false,
