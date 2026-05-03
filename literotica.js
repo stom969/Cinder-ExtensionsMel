@@ -1,7 +1,7 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "2.0.0",
+  version: "2.0.1",
   icon: "📖",
   description: "Read stories from Literotica.com (EPUB upload)",
   contentType: "books",
@@ -75,15 +75,14 @@ __cinderExport = {
 
     if (!contentHtml) throw new Error("No story content found");
 
-    // 2. Build the EPUB file (raw bytes)
+    // 2. Build EPUB
     const epubBytes = this._buildEpub(title, author, contentHtml);
 
-    // 3. Upload to file.io to get a direct download URL
-    const uploadUrl = "https://file.io";
-    const boundary = "----CinderUpload" + Math.random().toString(36).substring(2);
+    // 3. Upload to 0x0.st
+    const boundary = "----Cinder" + Math.random().toString(36).substring(2);
     const body = this._multipartBody(boundary, "file", title.replace(/[^a-z0-9]/gi, "_") + ".epub", epubBytes, "application/epub+zip");
 
-    const uploadRes = await cinder.fetch(uploadUrl, {
+    const uploadRes = await cinder.fetch("https://0x0.st", {
       method: "POST",
       headers: {
         "Content-Type": "multipart/form-data; boundary=" + boundary,
@@ -91,14 +90,12 @@ __cinderExport = {
       body: body,
     });
 
-    if (uploadRes.status === 200) {
-      const json = JSON.parse(uploadRes.data);
-      if (json.link) {
-        return { url: json.link };
-      }
+    // 0x0.st returns the URL as plain text (or an error message)
+    if (uploadRes.status === 200 && uploadRes.data && uploadRes.data.startsWith("http")) {
+      return { url: uploadRes.data.trim() };
     }
 
-    // 4. Fallback: if upload fails, try a data URL (may not work, but attempt)
+    // Fallback: try data URL (may not work in Cinder but last resort)
     const base64 = btoa(String.fromCharCode(...new Uint8Array(epubBytes)));
     return { url: "data:application/epub+zip;base64," + base64 };
   },
@@ -113,7 +110,6 @@ __cinderExport = {
     parts.push(fileBytes);
     parts.push(encoder.encode("\r\n--" + boundary + "--\r\n"));
 
-    // Concatenate all parts into a single Uint8Array
     let totalLength = 0;
     for (const p of parts) totalLength += p.length;
     const result = new Uint8Array(totalLength);
