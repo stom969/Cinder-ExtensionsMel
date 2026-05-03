@@ -23,11 +23,11 @@
 
 		{
 		    "id": "toongod",
-		    "name": "ToonGod",
-		    "version": "2.0.0",
+		    "name": "ToonGod Diag",
+		    "version": "3.0.0",
 		    "description": "Read comics from ToonGod.org",
 		    "contentType": "manga",
-		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js?v=8",
+		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js?v=9",
 		    "minCinderVersion": "2.0.0"
 		  },
 
