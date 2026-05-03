@@ -11,6 +11,16 @@
 			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
 			"minCinderVersion": "2.0.0"
 		},
+
+				{
+			  "id": "literotica",
+			  "name": "Literotica",
+			  "version": "1.0.0",
+			  "description": "Read stories from Literotica.com",
+			  "contentType": "manga",
+			  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=1",
+			  "minCinderVersion": "2.0.0"
+		},
 		{
 			"id": "readcomiconline",
 			"name": "ReadComicOnline",
