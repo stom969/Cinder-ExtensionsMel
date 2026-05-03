@@ -11,6 +11,7 @@
     "scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
     "minCinderVersion": "2.0.0"
   },
+		
   {
     "id": "readcomiconline",
     "name": "ReadComicOnline",
