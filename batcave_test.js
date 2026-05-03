@@ -6,6 +6,8 @@ __cinderExport = {
   description: "Checks comic page HTML",
   contentType: "manga",
 
+  //love love
+
   capabilities: {
     search: true,
     discover: false,
