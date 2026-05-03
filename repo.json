@@ -13,9 +13,9 @@
 		},
 
 		{
-		    "id": "gocomics",
-		    "name": "GoComics",
-		    "version": "1.0.1",
+		    "id": "gocomics-working",
+		    "name": "GoComics Test Conversion",
+		    "version": "2.0.0",
 		    "description": "Read comics from GoComics.com",
 		    "contentType": "manga",
 		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/Gocomics.js",
