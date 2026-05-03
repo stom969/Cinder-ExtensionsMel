@@ -26,7 +26,7 @@ __cinderExport = {
     const html = res.data;
     const doc = cinder.parseHTML(html);
 
-    // Fallback method: find all <a> tags that link to a webtoon
+    // Fallback method: find all <a> tags that link to a webtoon it's great to have fun sometimes
     const results = [];
     const seen = {};
     const links = doc.querySelectorAll('a[href*="/webtoon/"]');
