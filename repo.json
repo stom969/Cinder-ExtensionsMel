@@ -16,10 +16,10 @@
 				{
 			 	 "id": "literotica",
 				  "name": "Literotica",
-				  "version": "2.0.1",
-				  "description": "Read stories from Literotica.com as EPUB",
-				  "contentType": "books",
-				  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=1",
+				  "version": "3.0.0",
+				  "description": "Read stories from Literotica.com",
+				  "contentType": "manga",
+				  "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/literotica.js?v=15",
 				  "minCinderVersion": "2.0.0"
 		},
 		{
