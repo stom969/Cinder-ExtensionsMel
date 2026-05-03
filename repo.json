@@ -1,25 +1,26 @@
 {
-	"name": "Cinder Mel Extensions",
+	"name": "Cinder Manwah Extensions",
 	"author": "stom969",
 	"extensions": [
-		{
-			"id": "mangadex",
-			"name": "MangaDex",
-			"version": "1.0.7",
-			"description": "Search manga from MangaDex.org — free, community-run manga platform",
-			"contentType": "manga",
-			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/mangadex.js",
-			"minCinderVersion": "2.0.0"
-		},
+		[
+  {
+    "id": "toongod",
+    "name": "ToonGod",
+    "version": "1.0.0",
+    "description": "Read comics from ToonGod.org",
+    "contentType": "manga",
+    "scriptUrl": "http://localhost:8000/toongod.js",
+    "minCinderVersion": "2.0.0"
+  },
 
 		{
-		    "id": "gocomics-working",
-		    "name": "GoComics",
-		    "version": "2.0.1",
-		    "description": "Read comics from GoComics.com",
-		    "contentType": "manga",
-		    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/Gocomics.js",
-		    "minCinderVersion": "2.0.0"
+    "id": "toongod",
+    "name": "ToonGod",
+    "version": "1.0.0",
+    "description": "Read comics from ToonGod.org",
+    "contentType": "manga",
+    "scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/main/toongod.js",
+    "minCinderVersion": "2.0.0"
   },
 		{
 			"id": "readcomiconline",
