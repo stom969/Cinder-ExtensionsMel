@@ -1,12 +1,10 @@
 __cinderExport = {
   id: "literotica",
   name: "Literotica",
-  version: "3.0.0",
+  version: "3.0.1",
   icon: "📖",
   description: "Read stories from Literotica.com",
   contentType: "manga",
-
-  //love money
 
   capabilities: {
     search: true,
@@ -71,44 +69,51 @@ __cinderExport = {
     const res = await cinder.fetch(url, {
       headers: { "User-Agent": "CinderApp/1.0" }
     });
-    if (res.status !== 200) return [];
+    if (res.status !== 200) {
+      this._storyChunks = ["Error: Failed to load page (status " + res.status + ")"];
+      return [{ id: "page-0", title: "Error", chapterNumber: 1, dateUploaded: "", scanlator: "" }];
+    }
 
     const doc = cinder.parseHTML(res.data);
     const contentEl = doc.querySelector("[class*='introduction']");
-    if (!contentEl) return [];
 
-    const fullText = contentEl.text().trim();
-    const title = doc.querySelector("h1")?.text()?.trim() || "Story";
+    if (contentEl) {
+      const fullText = contentEl.text().trim();
+      const title = doc.querySelector("h1")?.text()?.trim() || "Story";
+      const chunkSize = 500;
+      this._storyChunks = [];
 
-    // Split into chunks of ~500 characters for small, reliable SVGs
-    const chunkSize = 500;
-    this._storyChunks = [];
-    const chapters = [];
+      for (let i = 0; i < fullText.length; i += chunkSize) {
+        this._storyChunks.push(fullText.substring(i, i + chunkSize));
+      }
 
-    for (let i = 0; i < fullText.length; i += chunkSize) {
-      const chunk = fullText.substring(i, i + chunkSize);
-      this._storyChunks.push(chunk);
-      chapters.push({
-        id: `page-${i}`,
-        title: `${title} (Page ${Math.floor(i / chunkSize) + 1})`,
-        chapterNumber: Math.floor(i / chunkSize) + 1,
-        dateUploaded: "",
-        scanlator: "",
-      });
+      const chapters = [];
+      for (let i = 0; i < this._storyChunks.length; i++) {
+        chapters.push({
+          id: `page-${i * chunkSize}`,
+          title: `${title} (Page ${i + 1})`,
+          chapterNumber: i + 1,
+          dateUploaded: "",
+          scanlator: "",
+        });
+      }
+      return chapters;
     }
 
-    return chapters;
+    // If the content element wasn't found, use a diagnostic dummy text
+    const htmlSnippet = res.data.substring(0, 500);
+    this._storyChunks = ["Could not find story content. HTML snippet: " + htmlSnippet];
+    return [{ id: "page-0", title: "Diag", chapterNumber: 1, dateUploaded: "", scanlator: "" }];
   },
 
   async getPages(chapterId) {
     const startIdx = parseInt(chapterId.replace("page-", ""));
-    const pageIndex = Math.floor(startIdx / 500);  // chunkSize is 500
+    const pageIndex = Math.floor(startIdx / 500);
     if (pageIndex < 0 || pageIndex >= this._storyChunks.length) return [];
 
     const text = this._storyChunks[pageIndex];
     const escapedText = this._escapeXml(text);
 
-    // Build a simple SVG with <tspan> lines (max 60 chars per line)
     const lines = this._wrapText(escapedText, 60);
     let y = 40;
     const lineHeight = 24;
@@ -127,11 +132,9 @@ __cinderExport = {
     </svg>`;
 
     const base64 = btoa(unescape(encodeURIComponent(svg)));
-    // Add a timestamp to bust any caching
     return [{ url: `data:image/svg+xml;base64,${base64}?ts=${Date.now()}` }];
   },
 
-  // Helper: wrap text into lines of maxLen characters
   _wrapText(text, maxLen) {
     const words = text.split(/\s+/);
     const lines = [];
@@ -139,7 +142,6 @@ __cinderExport = {
 
     for (const word of words) {
       if (word.length > maxLen) {
-        // If a single word is longer than maxLen, split it forcibly
         if (currentLine) {
           lines.push(currentLine);
           currentLine = "";
@@ -155,10 +157,9 @@ __cinderExport = {
       }
     }
     if (currentLine) lines.push(currentLine);
-    return lines.length ? lines : [text]; // fallback
+    return lines.length ? lines : [text];
   },
 
-  // Helper: escape XML special characters
   _escapeXml(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   }
