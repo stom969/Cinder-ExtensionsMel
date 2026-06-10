@@ -49,6 +49,16 @@
 			"contentType": "manga",
 			"scriptUrl": "https://raw.githubusercontent.com/TrexxyMon/Cinder-Extensions/main/weebcentral.js",
 			"minCinderVersion": "2.0.0"
+		},
+
+		{
+			"id": "TB library",
+			"name": TB library",
+			"version": "1.0.6",
+			"description": "Read manga, manhwa, and manhua from WeebCentral.com",
+			"contentType": "manga",
+"scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/torbox.js",
+			"minCinderVersion": "2.0.0"
 		}
 	]
 }
