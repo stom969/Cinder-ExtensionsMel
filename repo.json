@@ -53,7 +53,7 @@
 
 		{
 			"id": "TB library",
-			"name": TB library",
+			"name": "TB library",
 			"version": "1.0.6",
 			"description": "Read manga, manhwa, and manhua from WeebCentral.com",
 			"contentType": "manga",
