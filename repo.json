@@ -13,6 +13,16 @@
 			"minCinderVersion": "2.0.0"
 		},
 
+		{
+			"id": "nyaa.si",
+			"name": "nyaa.sITB",
+			"version": "0.0.1",
+			"description": "Search manga from MangaDex.org — free, community-run manga platform",
+			"contentType": "manga",
+			"scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/nyaa.js",
+			"minCinderVersion": "2.0.0"
+		},
+
 				{
 			 	 "id": "literotica",
 				  "name": "Literotica",
