@@ -14,6 +14,16 @@
 		},
 
 		{
+			"id": "TB",
+			"name": "TB",
+			"version": "1.0",
+			"description": "Search Ebooks from your Torbox Library",
+			"contentType": "manga",
+			"scriptUrl": "https://raw.githubusercontent.com/stom969/Cinder-ExtensionsMel/refs/heads/main/TB.js",
+			"minCinderVersion": "2.0.0"
+		},
+
+		{
 			"id": "nyaa.si",
 			"name": "nyaa.sITB",
 			"version": "0.0.1",
